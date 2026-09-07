@@ -1,41 +1,19 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
+const { wrapModel } = require('./mongooseCompat');
 
-const announcementSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    trim: true
+const AnnouncementModel = sequelize.define(
+  'Announcement',
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    title: { type: DataTypes.STRING, allowNull: false },
+    content: { type: DataTypes.TEXT, allowNull: false },
+    departments: { type: DataTypes.JSONB, defaultValue: [] },
+    isPublished: { type: DataTypes.BOOLEAN, defaultValue: false },
+    showOnFrontend: { type: DataTypes.BOOLEAN, defaultValue: true },
+    announcementImage: { type: DataTypes.STRING, defaultValue: '' },
   },
-  content: {
-    type: String,
-    required: true
-  },
-  departments: [{
-    type: String,
-    required: true
-  }],
-  isPublished: {
-    type: Boolean,
-    default: false
-  },
-  showOnFrontend: {
-    type: Boolean,
-    default: true
-  },
-  announcementImage: {
-    type: String,
-    default: ''
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
-}, {
-  timestamps: true
-});
+  { tableName: 'announcements', timestamps: true }
+);
 
-module.exports = mongoose.model('Announcement', announcementSchema);
+module.exports = wrapModel(AnnouncementModel);

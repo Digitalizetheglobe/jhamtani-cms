@@ -48,8 +48,9 @@ const Register = () => {
   return (
     <AuthLayout>
       <div>
-        <h2 className="text-3xl font-bold mb-2 text-center text-gray-800">Admin Registration</h2>
-        <p className="text-center text-gray-600 mb-6">Create a new admin account</p>
+        <img src="/jhamtani-logo.webp" alt="Jhamtani" className="h-10 mx-auto mb-4 object-contain lg:hidden" />
+        <h2 className="text-3xl font-bold mb-2 text-center text-gray-800">Jhamtani CMS</h2>
+        <p className="text-center text-gray-600 mb-6">Create an admin account for the Jhamtani website</p>
         
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
@@ -123,7 +124,7 @@ const Register = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white p-3 rounded-lg font-semibold transition-colors duration-200"
+            className="w-full bg-[#C5A880] hover:bg-[#A0725B] disabled:bg-[#C5A880]/50 text-[#191f26] p-3 rounded-lg font-semibold transition-colors duration-200"
           >
             {isLoading ? 'Registering...' : 'Register'}
           </button>

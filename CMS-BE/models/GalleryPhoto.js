@@ -1,33 +1,30 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
+const { wrapModel } = require('./mongooseCompat');
 
-const GALLERY_CATEGORIES = [
-  'exhibitions',
-  'happy clients',
-  'outings',
-  'festivals'
-];
+const GALLERY_CATEGORIES = ['exhibitions', 'happy clients', 'outings', 'festivals'];
 
-const galleryPhotoSchema = new mongoose.Schema({
-  title: { type: String },
-  description: { type: String },
-  imageUrl: { type: String },
-  altText: { type: String },
-  category: { type: String, enum: GALLERY_CATEGORIES },
-  tags: [String],
-  isActive: { type: Boolean, default: true },
-  order: { type: Number, default: 0 },
-  uploadedBy: { type: String },
-  fileSize: { type: Number },
-  dimensions: {
-    width: { type: Number },
-    height: { type: Number }
-  }
-}, {
-  timestamps: true
+const GalleryPhotoModel = sequelize.define(
+  'GalleryPhoto',
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    title: { type: DataTypes.STRING, allowNull: true },
+    description: { type: DataTypes.TEXT, allowNull: true },
+    imageUrl: { type: DataTypes.STRING, allowNull: true },
+    altText: { type: DataTypes.STRING, allowNull: true },
+    category: { type: DataTypes.STRING, allowNull: true },
+    tags: { type: DataTypes.JSONB, defaultValue: [] },
+    isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+    order: { type: DataTypes.INTEGER, defaultValue: 0 },
+    uploadedBy: { type: DataTypes.STRING, allowNull: true },
+    fileSize: { type: DataTypes.INTEGER, allowNull: true },
+    dimensions: { type: DataTypes.JSONB, defaultValue: {} },
+  },
+  { tableName: 'gallery_photos', timestamps: true }
+);
+
+module.exports = wrapModel(GalleryPhotoModel, {
+  statics: {
+    getAllowedCategories: () => GALLERY_CATEGORIES,
+  },
 });
-
-galleryPhotoSchema.statics.getAllowedCategories = function() {
-  return GALLERY_CATEGORIES;
-};
-
-module.exports = mongoose.model('GalleryPhoto', galleryPhotoSchema);

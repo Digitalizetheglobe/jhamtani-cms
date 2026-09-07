@@ -1,11 +1,7 @@
 import axios from 'axios';
+import { API_BASE_URL, getApiBaseUrl } from './config';
 
-// Live Production API Base URL
-export const getApiBaseUrl = () => {
-  return 'https://api.risingspaces.in';
-};
-
-const API_BASE_URL = 'https://api.risingspaces.in';
+export { getApiBaseUrl };
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -21,8 +21,9 @@ import {
   FaImage,
   FaBuilding
 } from 'react-icons/fa';
-import logo from '../assets/DTG.png'
-import logo2 from '../assets/rising-logo.png'
+import logo2 from '../assets/jhamtani-logo.webp'
+
+const DESKTOP_BREAKPOINT = 1024;
 
 const Sidebar = () => {
   // Add custom scrollbar styles
@@ -33,20 +34,20 @@ const Sidebar = () => {
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
         scrollbar-width: thin;
-        scrollbar-color: #4B5563 #111827;
+        scrollbar-color: #C5A880 #191f26;
       }
       .sidebar-scroll::-webkit-scrollbar {
         width: 5px;
       }
       .sidebar-scroll::-webkit-scrollbar-track {
-        background: #111827;
+        background: #191f26;
       }
       .sidebar-scroll::-webkit-scrollbar-thumb {
-        background: #4B5563;
+        background: #C5A880;
         border-radius: 4px;
       }
       .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-        background: #6B7280;
+        background: #A0725B;
       }
     `;
     document.head.appendChild(style);
@@ -59,7 +60,7 @@ const Sidebar = () => {
 
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < DESKTOP_BREAKPOINT);
   const [hoveredItem, setHoveredItem] = useState(null);
   const [adminData, setAdminData] = useState(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -91,9 +92,9 @@ const Sidebar = () => {
 
   // Handle window resize without resetting on mobile address bar scroll
   useEffect(() => {
-    let prevIsMobile = window.innerWidth < 768;
+    let prevIsMobile = window.innerWidth < DESKTOP_BREAKPOINT;
     const handleResize = () => {
-      const mobile = window.innerWidth < 768;
+      const mobile = window.innerWidth < DESKTOP_BREAKPOINT;
       if (mobile !== prevIsMobile) {
         prevIsMobile = mobile;
         setIsMobile(mobile);
@@ -127,6 +128,15 @@ const Sidebar = () => {
     }
   }, [location.pathname, location.search, isMobile]);
 
+  useEffect(() => {
+    const path = location.pathname;
+    setExpandedMenus((prev) => ({
+      ...prev,
+      '/blog-management': path.startsWith('/blog-management') ? true : prev['/blog-management'],
+      '/media-manager': path.startsWith('/media-manager') ? true : prev['/media-manager'],
+    }));
+  }, [location.pathname]);
+
   const handleLinkClick = () => {
     if (isMobile) {
       setIsOpen(false);
@@ -138,25 +148,25 @@ const Sidebar = () => {
       path: '/', 
       icon: <FaHome className="text-white" />, 
       label: 'Dashboard',
-      color: 'from-red-600 to-red-600'
+      color: 'from-[#C5A880] to-[#A0725B]'
     },
     { 
       path: '/leads-management', 
       icon: <FaUsers className="text-white" />, 
       label: 'Lead Management',
-      color: 'from-red-600 to-red-600'
+      color: 'from-[#C5A880] to-[#A0725B]'
     },
     { 
       path: '/teammanagement', 
       icon: <FaUserFriends className="text-white" />, 
       label: 'Team Management',
-      color: 'from-red-600 to-red-600'
+      color: 'from-[#C5A880] to-[#A0725B]'
     },
     { 
       path: '/blog-management', 
       icon: <FaClipboardList className="text-white" />, 
       label: 'Blog Management',
-      color: 'from-red-600 to-red-600',
+      color: 'from-[#C5A880] to-[#A0725B]',
       hasSubmenu: true,
       submenu: [
         {
@@ -175,37 +185,37 @@ const Sidebar = () => {
       path: '/testimonialmanagement', 
       icon: <FaTrophy className="text-white" />, 
       label: 'Testimonials',
-      color: 'from-red-600 to-red-600'
+      color: 'from-[#C5A880] to-[#A0725B]'
     },
     { 
       path: '/youtube-management', 
       icon: <FaPlay className="text-white" />, 
       label: 'YouTube Videos',
-      color: 'from-red-600 to-red-600'
+      color: 'from-[#C5A880] to-[#A0725B]'
     },
     { 
       path: '/form-management', 
       icon: <FaChartBar className="text-white" />, 
       label: 'Form Management',
-      color: 'from-red-600 to-red-600'
+      color: 'from-[#C5A880] to-[#A0725B]'
     },
     { 
       path: '/banner-management', 
       icon: <FaImage className="text-white" />, 
       label: 'Banner Management',
-      color: 'from-red-600 to-red-600'
+      color: 'from-[#C5A880] to-[#A0725B]'
     },
     { 
       path: '/project-management', 
       icon: <FaBuilding className="text-white" />, 
-      label: 'Project Management',
-      color: 'from-red-600 to-red-600'
+      label: 'Projects',
+      color: 'from-[#C5A880] to-[#A0725B]'
     },
     { 
       path: '/media-manager', 
       icon: <FaYoutubeSquare className="text-white" />, 
       label: 'Media Manager',
-      color: 'from-red-600 to-red-600',
+      color: 'from-[#C5A880] to-[#A0725B]',
       hasSubmenu: true,
       submenu: [
         {
@@ -221,7 +231,7 @@ const Sidebar = () => {
         {
           path: '/media-manager/happy-clients',
           icon: <FaUsers className="text-white" />,
-          label: 'Happy Clients'
+          label: 'Happy Faces'
         }
       ]
     },
@@ -229,7 +239,7 @@ const Sidebar = () => {
       path: '/announcement/list', 
       icon: <FaHackerNewsSquare className="text-white" />, 
       label: 'Announcement',
-      color: 'from-red-600 to-red-600'
+      color: 'from-[#C5A880] to-[#A0725B]'
     }
   ];
 
@@ -255,9 +265,12 @@ const Sidebar = () => {
   // Check if a route is active (including submenu items)
   const isRouteActive = (route) => {
     if (route.hasSubmenu) {
-      return route.submenu.some(subItem => location.pathname === subItem.path);
+      return route.submenu.some((subItem) => location.pathname.startsWith(subItem.path.split('?')[0]));
     }
-    return location.pathname === route.path;
+    if (route.path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname === route.path || location.pathname.startsWith(`${route.path}/`);
   };
 
   return (
@@ -266,7 +279,7 @@ const Sidebar = () => {
       <button 
         onClick={toggleSidebar}
         aria-label="Toggle navigation menu"
-        className={`md:hidden fixed top-3 left-3 z-40 p-2.5 rounded-xl bg-gray-900/90 text-white shadow-xl border border-gray-700 backdrop-blur-md transition-all duration-300 ${isOpen ? 'opacity-0 pointer-events-none scale-90' : 'opacity-100 scale-100 hover:bg-gray-800'}`}
+        className={`lg:hidden fixed top-2.5 left-3 z-50 p-2.5 rounded-xl bg-[#191f26] text-[#C5A880] shadow-xl border border-[#C5A880]/30 backdrop-blur-md transition-all duration-300 ${isOpen ? 'opacity-0 pointer-events-none scale-90' : 'opacity-100 scale-100 hover:bg-[#A0725B] hover:text-white'}`}
       >
         <FaBars className="w-5 h-5" />
       </button>
@@ -282,12 +295,12 @@ const Sidebar = () => {
 
       {/* Sidebar */}
       <aside 
-        className={`fixed inset-y-0 left-0 h-screen h-[100dvh] w-64 max-w-[80vw] bg-black text-white shadow-2xl z-40 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 flex flex-col`}
+        className={`fixed inset-y-0 left-0 h-screen h-[100dvh] w-64 max-w-[85vw] bg-[#191f26] text-white shadow-2xl z-40 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 flex flex-col`}
       >
         {/* Header (Logo + Mobile Close Button) */}
-        <div className="relative p-4 md:p-6 pb-3 md:pb-4 border-b border-gray-800 flex-shrink-0 flex items-center justify-between">
+        <div className="relative p-4 md:p-6 pb-3 md:pb-4 border-b border-white/10 flex-shrink-0 flex items-center justify-between">
           <div className="flex items-center justify-center w-full">
-            <img src={logo2} alt="Logo" className="w-[150px] h-auto max-h-[60px] object-contain" />
+            <img src={logo2} alt="Jhamtani" className="w-[170px] h-auto max-h-[64px] object-contain" />
           </div>
 
           {/* Close button for mobile */}
@@ -393,7 +406,7 @@ const Sidebar = () => {
                   onClick={handleLinkClick}
                   className={`
                     relative flex items-center p-3 my-1 md:my-1.5 rounded-lg transition-all duration-200
-                    ${location.pathname === route.path ? 
+                    ${isRouteActive(route) ? 
                       `bg-gradient-to-r ${route.color} shadow-md` : 
                       'hover:bg-gray-800 text-gray-200'}
                   `}
@@ -407,11 +420,11 @@ const Sidebar = () => {
                   
                   {/* Animated chevron */}
                   <FaChevronRight 
-                    className={`ml-auto text-xs transition-all duration-300 ${hoveredItem === route.path || location.pathname === route.path ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`} 
+                    className={`ml-auto text-xs transition-all duration-300 ${hoveredItem === route.path || isRouteActive(route) ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'}`} 
                   />
                   
                   {/* Active indicator */}
-                  {location.pathname === route.path && (
+                  {isRouteActive(route) && (
                     <span className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-6 md:h-8 rounded-l-full bg-white"></span>
                   )}
                 </Link>
@@ -426,7 +439,7 @@ const Sidebar = () => {
             className="flex items-center cursor-pointer p-1.5 rounded-lg hover:bg-gray-800/80 transition-colors"
             onClick={() => setShowPremiumModal(true)}
           >
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-red-600 to-rose-600 flex items-center justify-center flex-shrink-0 shadow-md">
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-r from-[#C5A880] to-[#A0725B] flex items-center justify-center flex-shrink-0 shadow-md">
               <span className="font-bold text-white text-sm md:text-base">
                 {adminData?.name ? adminData.name.charAt(0).toUpperCase() : 'A'}
               </span>
@@ -461,7 +474,7 @@ const Sidebar = () => {
               {adminData ? (
                 <>
                   <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-r from-red-600 to-rose-600 flex items-center justify-center shadow-lg">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#C5A880] to-[#A0725B] flex items-center justify-center shadow-lg">
                       <span className="text-2xl font-bold text-white">
                         {adminData.name.charAt(0).toUpperCase()}
                       </span>
@@ -475,11 +488,11 @@ const Sidebar = () => {
                   <div className="bg-gray-800/80 border border-gray-700 rounded-xl p-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-red-400 font-medium">Email</p>
+                        <p className="text-xs text-[#C5A880] font-medium">Email</p>
                         <p className="text-sm text-white truncate">{adminData.email || 'N/A'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-red-400 font-medium">Role</p>
+                        <p className="text-xs text-[#C5A880] font-medium">Role</p>
                         <p className="text-sm text-white">{adminData.role}</p>
                       </div>
                     </div>
@@ -491,7 +504,7 @@ const Sidebar = () => {
               
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white py-2.5 px-4 rounded-xl font-medium transition-colors shadow-lg"
+                className="w-full flex items-center justify-center space-x-2 bg-[#C5A880] hover:bg-[#A0725B] text-[#191f26] py-2.5 px-4 rounded-xl font-medium transition-colors shadow-lg"
               >
                 <FaSignOutAlt />
                 <span>Logout</span>

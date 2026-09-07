@@ -16,7 +16,7 @@ const BlogView = () => {
   const fetchBlogData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`https://api.risingspaces.in/api/blogs/${blogId}`);
+      const response = await fetch(`http://localhost:5000/api/blogs/${blogId}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch blog data');
@@ -61,7 +61,7 @@ const BlogView = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="cms-page">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-center items-center h-64">
             <div className="w-12 h-12 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin"></div>
@@ -73,7 +73,7 @@ const BlogView = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="cms-page">
         <div className="max-w-4xl mx-auto">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             <strong className="font-bold">Error: </strong>
@@ -86,7 +86,7 @@ const BlogView = () => {
 
   if (!blog) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="cms-page">
         <div className="max-w-4xl mx-auto">
           <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
             Blog not found
@@ -100,22 +100,22 @@ const BlogView = () => {
   const categories = parseArrayField(blog.categories);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="cms-page">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+          <div className="bg-[#191f26] p-6 text-white">
             <div className="flex items-center justify-between">
               <button
                 onClick={() => navigate('/blog-management/list')}
-                className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition"
+                className="cms-btn-outline !text-[#C5A880]"
               >
                 <FiArrowLeft className="w-4 h-4" />
                 <span>Back to List</span>
               </button>
               <button
                 onClick={() => navigate(`/blog-management/edit/${blogId}`)}
-                className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition"
+                className="cms-btn-outline !text-[#C5A880]"
               >
                 <FiEdit2 className="w-4 h-4" />
                 <span>Edit Blog</span>

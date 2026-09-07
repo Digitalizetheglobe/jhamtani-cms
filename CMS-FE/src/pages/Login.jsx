@@ -46,8 +46,9 @@ const Login = () => {
   return (
     <AuthLayout>
       <div>
-        <h2 className="text-3xl font-bold mb-2 text-center text-gray-800">Admin Login</h2>
-        <p className="text-center text-gray-600 mb-6">Sign in to access the CMS</p>
+        <img src="/jhamtani-logo.webp" alt="Jhamtani" className="h-10 mx-auto mb-4 object-contain lg:hidden" />
+        <h2 className="text-3xl font-bold mb-2 text-center text-gray-800">Jhamtani CMS</h2>
+        <p className="text-center text-gray-600 mb-6">Sign in to manage jhamtani.netlify.app</p>
         
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
@@ -64,7 +65,7 @@ const Login = () => {
               id="email"
               type="email"
               placeholder="Enter your email"
-              className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] focus:border-transparent"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -79,7 +80,7 @@ const Login = () => {
               id="password"
               type="password"
               placeholder="Enter your password"
-              className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#C5A880] focus:border-transparent"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -89,7 +90,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white p-3 rounded-lg font-semibold transition-colors duration-200"
+            className="w-full bg-[#C5A880] hover:bg-[#A0725B] disabled:bg-[#C5A880]/50 text-[#191f26] p-3 rounded-lg font-semibold transition-colors duration-200"
           >
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
@@ -97,7 +98,7 @@ const Login = () => {
           <div className="text-center mt-4">
             <span className="text-gray-600">
               Don't have an account?{' '}
-              <Link to="/register" className="text-blue-600 hover:text-blue-700 font-semibold">
+              <Link to="/register" className="text-[#A0725B] hover:text-[#C5A880] font-semibold">
                 Register now
               </Link>
             </span>

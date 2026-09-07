@@ -1,42 +1,19 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
+const { wrapModel } = require('./mongooseCompat');
 
-const youtubeVideoSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
+const YouTubeVideoModel = sequelize.define(
+  'YouTubeVideo',
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    name: { type: DataTypes.STRING, allowNull: false },
+    description: { type: DataTypes.TEXT, allowNull: false },
+    url: { type: DataTypes.STRING, allowNull: false },
+    isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+    createdBy: { type: DataTypes.UUID, allowNull: true },
+    updatedBy: { type: DataTypes.UUID, allowNull: true },
   },
-  description: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  url: {
-    type: String,
-    required: true,
-    trim: true,
-    validate: {
-      validator: function(v) {
-        if (!v) return false;
-        // YouTube URL validation - supports various formats including parameters
-        const youtubePattern = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)[a-zA-Z0-9_-]{11}([?&].*)?$/;
-        return youtubePattern.test(v);
-      },
-      message: 'Please provide a valid YouTube URL (e.g., https://youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID)'
-    }
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  updatedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
-}, { timestamps: true });
+  { tableName: 'youtube_videos', timestamps: true }
+);
 
-module.exports = mongoose.model('YouTubeVideo', youtubeVideoSchema);
+module.exports = wrapModel(YouTubeVideoModel);

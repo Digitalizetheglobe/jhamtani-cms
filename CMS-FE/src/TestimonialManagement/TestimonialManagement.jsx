@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import CircularProgress from '@mui/material/CircularProgress';
+import SearchIcon from '@mui/icons-material/Search';
+import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
+import PageShell from '../components/PageShell';
+import { PageHero, StatCards, EmptyState } from '../components/PageHero';
 
 const TestimonialManagement = () => {
   const [testimonials, setTestimonials] = useState([]);
@@ -18,12 +23,13 @@ const TestimonialManagement = () => {
   });
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch all testimonials
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const response = await fetch('https://api.risingspaces.in/api/testimonials/');
+        const response = await fetch('http://localhost:5000/api/testimonials/');
         const data = await response.json();
         console.log('Fetched testimonials:', data); // Debug log
         setTestimonials(data);
@@ -75,8 +81,8 @@ const TestimonialManagement = () => {
     e.preventDefault();
     try {
       const url = currentTestimonial
-        ? `https://api.risingspaces.in/api/testimonials/${currentTestimonial._id}`
-        : 'https://api.risingspaces.in/api/testimonials/';
+        ? `http://localhost:5000/api/testimonials/${currentTestimonial._id}`
+        : 'http://localhost:5000/api/testimonials/';
 
       const method = currentTestimonial ? 'PUT' : 'POST';
 
@@ -159,7 +165,7 @@ const TestimonialManagement = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this testimonial?')) {
       try {
-        const response = await fetch(`https://api.risingspaces.in/api/testimonials/${id}`, {
+        const response = await fetch(`http://localhost:5000/api/testimonials/${id}`, {
           method: 'DELETE'
         });
 
@@ -201,179 +207,190 @@ const TestimonialManagement = () => {
     return [...Array(5)].map((_, i) => (
       <span
         key={i}
-        className={`text-2xl ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                    className={`text-lg ${i < rating ? 'text-[#C5A880]' : 'text-gray-300'}`}
       >
         ★
       </span>
     ));
   };
 
+  const list = Array.isArray(testimonials) ? testimonials : [];
+  const filteredTestimonials = list.filter((t) => {
+    const q = searchTerm.toLowerCase();
+    if (!q) return true;
+    return (
+      (t.fullName || '').toLowerCase().includes(q) ||
+      (t.testimonialText || '').toLowerCase().includes(q) ||
+      (t.companyName || '').toLowerCase().includes(q)
+    );
+  });
+
+  const stats = [
+    { label: 'Stories', value: list.length, hint: 'All testimonials' },
+    { label: 'Showing', value: filteredTestimonials.length, hint: 'Current search' },
+    { label: '5-star', value: list.filter((t) => Number(t.rating) === 5).length, hint: 'Top rated' },
+    { label: 'With photo', value: list.filter((t) => t.photoUrl).length, hint: 'Has portrait' },
+  ];
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
+      <PageShell>
+        <div className="cms-card p-16 flex flex-col items-center justify-center">
+          <CircularProgress sx={{ color: '#C5A880' }} />
+          <p className="mt-4 text-[#5B584C] text-sm">Loading testimonials...</p>
+        </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-extrabold text-gray-900">Testimonial Management</h1>
-        <button
-          onClick={openNewTestimonialModal}
-          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2 px-6 rounded-lg shadow-lg transition duration-300 flex items-center"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          Add Testimonial
+    <PageShell>
+    <div className="space-y-5 sm:space-y-6">
+      <PageHero
+        kicker="Customer Stories"
+        title="Testimonials"
+        subtitle="Manage reviews shown on the public website."
+      >
+        <button type="button" onClick={openNewTestimonialModal} className="cms-btn-primary">
+          + Add testimonial
         </button>
+      </PageHero>
+
+      <StatCards items={stats} />
+
+      <div className="cms-card p-4 sm:p-5">
+        <div className="relative">
+          <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search by name or story..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="cms-input pl-10"
+          />
+        </div>
       </div>
 
-      {/* Testimonials Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {testimonials.map((testimonial) => (
-          <div
+      {filteredTestimonials.length === 0 ? (
+        <EmptyState
+          icon={FormatQuoteIcon}
+          title="No testimonials yet"
+          message={
+            searchTerm
+              ? 'Nothing matches this search. Clear it and try again.'
+              : 'Add the first customer story for the public site.'
+          }
+          action={
+            <button type="button" onClick={openNewTestimonialModal} className="cms-btn-primary">
+              + Add testimonial
+            </button>
+          }
+        />
+      ) : (
+      <div className="space-y-3">
+        {filteredTestimonials.map((testimonial) => (
+          <article
             key={testimonial._id}
-            className="bg-gradient-to-br from-white to-gray-100 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300"
+            className="cms-card p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4"
           >
-            <div className="p-6">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center space-x-3">
-                  {/* Profile Photo */}
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                    {testimonial.photoUrl ? (
-                      <img
-                        src={testimonial.photoUrl}
-                        alt={testimonial.fullName}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 text-white font-semibold text-lg">
-                        {testimonial.fullName.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-800">{testimonial.fullName}</h3>
-                    <p className="text-gray-600">
-                      {testimonial.otherFields?.position && `${testimonial.otherFields.position}`}
-                      {testimonial.otherFields?.position && testimonial.companyName && ' at '}
-                      {testimonial.companyName || 'No company specified'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  {renderStars(testimonial.rating)}
-                </div>
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-[#C5A880]/20 text-[#A0725B] flex items-center justify-center font-semibold flex-shrink-0">
+                {testimonial.photoUrl ? (
+                  <img
+                    src={testimonial.photoUrl}
+                    alt={testimonial.fullName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  (testimonial.fullName || '?').charAt(0).toUpperCase()
+                )}
               </div>
-              <p className="mt-4 text-gray-700 italic">"{testimonial.testimonialText}"</p>
-              <div className="mt-6 flex justify-between items-center">
-                <span className="text-sm text-gray-500">
-                  {new Date(testimonial.date).toLocaleDateString()}
-                </span>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleEdit(testimonial)}
-                    className="text-blue-600 hover:text-blue-800 transition duration-300"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(testimonial._id)}
-                    className="text-red-600 hover:text-red-800 transition duration-300"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </button>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-[#191f26] truncate">{testimonial.fullName}</h3>
+                <p className="text-sm text-[#5B584C] truncate">
+                  {[testimonial.otherFields?.position, testimonial.companyName].filter(Boolean).join(' · ')
+                    || 'No company specified'}
+                </p>
+                <p className="mt-2 text-sm text-[#5B584C] line-clamp-2 italic">"{testimonial.testimonialText}"</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="flex items-center">{renderStars(testimonial.rating)}</span>
+                  <span className="text-[11px] text-gray-500">
+                    {testimonial.date ? new Date(testimonial.date).toLocaleDateString() : ''}
+                  </span>
                 </div>
               </div>
             </div>
-          </div>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => handleEdit(testimonial)} className="cms-btn-primary !px-4">
+                Edit
+              </button>
+              <button type="button" onClick={() => handleDelete(testimonial._id)} className="cms-btn-outline !px-4">
+                Delete
+              </button>
+            </div>
+          </article>
         ))}
       </div>
+      )}
 
-      {/* Modal for Add/Edit */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div
-            className="bg-white rounded-xl shadow-2xl w-full max-w-md animate-fadeIn max-h-[90vh] overflow-y-auto"
-          >
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {currentTestimonial ? 'Edit Testimonial' : 'Add Testimonial'}
+                <h2 className="font-display text-2xl text-[#191f26]">
+                  {currentTestimonial ? 'Edit testimonial' : 'Add testimonial'}
                 </h2>
                 <button
+                  type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="text-gray-500 hover:text-gray-700 transition duration-300"
+                  className="text-[#5B584C] hover:text-[#191f26]"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  ✕
                 </button>
               </div>
               <form onSubmit={handleSubmit}>
                 <div className="space-y-4">
-                  {/* Photo Upload */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Profile Photo</label>
-                    <div className="flex items-center space-x-4">
-                      <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                    <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Profile photo</label>
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-full overflow-hidden bg-[#C5A880]/20 flex-shrink-0 flex items-center justify-center text-[#A0725B] font-semibold">
                         {photoPreview ? (
-                          <img
-                            src={photoPreview}
-                            alt="Preview"
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 text-white font-semibold text-lg">
-                            ?
-                          </div>
+                          '?'
                         )}
                       </div>
                       <div className="flex-1">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handlePhotoChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Upload a profile photo (optional)</p>
+                        <input type="file" accept="image/*" onChange={handlePhotoChange} className="cms-input" />
+                        <p className="text-xs text-[#5B584C] mt-1">Optional</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Form fields */}
                   {[
                     { label: 'Full Name', type: 'text', name: 'fullName', value: formData.fullName },
                     { label: 'Rating', type: 'select', name: 'rating', value: formData.rating, options: [1, 2, 3, 4, 5] },
                     { label: 'Testimonial Text', type: 'textarea', name: 'testimonialText', value: formData.testimonialText },
                     { label: 'Date', type: 'date', name: 'date', value: formData.date },
-                    // { label: 'Company Name', type: 'text', name: 'companyName', value: formData.companyName },
-                    // { label: 'Position', type: 'text', name: 'position', value: formData.otherFields.position }
                   ].map(({ label, type, name, value, options }, index) => (
                     <div key={index}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                      <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">{label}</label>
                       {type === 'textarea' ? (
                         <textarea
                           name={name}
                           value={value}
                           onChange={handleInputChange}
                           rows="3"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="cms-input"
                           required
-                        ></textarea>
+                        />
                       ) : type === 'select' ? (
                         <select
                           name={name}
                           value={value}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="cms-input cursor-pointer"
                           required
                         >
                           {options.map((option) => (
@@ -388,25 +405,18 @@ const TestimonialManagement = () => {
                           name={name}
                           value={value}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="cms-input"
                           required
                         />
                       )}
                     </div>
                   ))}
                 </div>
-                <div className="mt-6 flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition duration-200"
-                  >
+                <div className="mt-6 pt-4 border-t border-[#C5A880]/20 flex justify-end gap-2">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="cms-btn-outline">
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-md hover:from-blue-600 hover:to-purple-700 transition duration-300"
-                  >
+                  <button type="submit" className="cms-btn-primary">
                     {currentTestimonial ? 'Update' : 'Save'}
                   </button>
                 </div>
@@ -416,6 +426,7 @@ const TestimonialManagement = () => {
         </div>
       )}
     </div>
+    </PageShell>
   );
 };
 

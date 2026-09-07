@@ -1,83 +1,59 @@
-import React, { useState } from 'react';
-import { FaImages, FaPlay, FaUsers, FaPlus } from 'react-icons/fa';
-import GalleryPhotos from './GalleryPhotos';
-import VideoUploads from './VideoUploads';
-import HappyClients from './HappyClients';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { FaImages, FaPlay, FaUsers } from 'react-icons/fa';
+import PageShell from '../PageShell';
+import { PageHero } from '../PageHero';
 
 const MediaManagerDashboard = () => {
-  const [activeTab, setActiveTab] = useState('gallery');
-  
-  console.log('MediaManagerDashboard rendered with activeTab:', activeTab);
-
-  const tabs = [
+  const modules = [
     {
-      id: 'gallery',
-      label: 'Gallery Photos',
-      icon: <FaImages className="w-5 h-5" />,
-      component: <GalleryPhotos />
+      to: '/media-manager/gallery-photos',
+      title: 'Gallery',
+      subtitle: 'Exhibitions, outings, and festivals',
+      icon: FaImages,
     },
     {
-      id: 'videos',
-      label: 'Video Uploads',
-      icon: <FaPlay className="w-5 h-5" />,
-      component: <VideoUploads />
+      to: '/media-manager/video-uploads',
+      title: 'Video uploads',
+      subtitle: 'Hosted videos for the public site',
+      icon: FaPlay,
     },
     {
-      id: 'clients',
-      label: 'Happy Clients',
-      icon: <FaUsers className="w-5 h-5" />,
-      component: <HappyClients />
-    }
+      to: '/media-manager/happy-clients',
+      title: 'Happy Faces',
+      subtitle: 'Client portraits and stories',
+      icon: FaUsers,
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Media Manager</h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Manage your gallery photos, video uploads, and happy client testimonials
-              </p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                Media Management
+    <PageShell>
+      <div className="space-y-5 sm:space-y-6">
+        <PageHero
+          kicker="Media"
+          title="Library"
+          subtitle="Gallery photos, videos, and happy faces for the public site."
+        />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {modules.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="cms-card p-6 hover:border-[#C5A880] transition-colors group"
+            >
+              <div className="w-11 h-11 rounded-xl bg-[#C5A880]/15 text-[#A0725B] flex items-center justify-center mb-4">
+                <item.icon className="w-5 h-5" />
               </div>
-            </div>
-          </div>
+              <h2 className="font-display text-2xl text-[#191f26]">{item.title}</h2>
+              <p className="text-sm text-[#5B584C] mt-1">{item.subtitle}</p>
+              <p className="mt-4 text-xs font-semibold tracking-wider uppercase text-[#A0725B] group-hover:underline">
+                Open →
+              </p>
+            </Link>
+          ))}
         </div>
       </div>
-
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors duration-200 ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </div>
-
-      {/* Content Area */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {tabs.find(tab => tab.id === activeTab)?.component}
-      </div>
-    </div>
+    </PageShell>
   );
 };
 

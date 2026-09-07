@@ -1,99 +1,32 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
+const { wrapModel } = require('./mongooseCompat');
 
-const bannerSchema = new mongoose.Schema(
+const BannerModel = sequelize.define(
+  'Banner',
   {
-    title: {
-      type: String,
-      required: [true, 'Banner title is required'],
-      trim: true,
-    },
-    placement: {
-      type: String,
-      trim: true,
-      lowercase: true,
-      default: '',
-    },
-    description: {
-      type: String,
-      trim: true,
-      default: '',
-    },
-    mediaType: {
-      type: String,
-      enum: ['image', 'video'],
-      default: 'image',
-    },
-    desktopBanner: {
-      type: String,
-      required: [true, 'Desktop banner is required'],
-    },
-    tabletBanner: {
-      type: String,
-      default: '',
-    },
-    mobileBanner: {
-      type: String,
-      default: '',
-    },
-    linkUrl: {
-      type: String,
-      trim: true,
-      default: '',
-    },
-    target: {
-      type: String,
-      enum: ['_self', '_blank'],
-      default: '_self',
-    },
-    altText: {
-      type: String,
-      trim: true,
-      default: '',
-    },
-    caption: {
-      type: String,
-      trim: true,
-      default: '',
-    },
-    subCaption: {
-      type: String,
-      trim: true,
-      default: '',
-    },
-    buttonText: {
-      type: String,
-      trim: true,
-      default: '',
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-      index: true,
-    },
-    startDate: {
-      type: Date,
-      default: null,
-    },
-    endDate: {
-      type: Date,
-      default: null,
-    },
-    order: {
-      type: Number,
-      default: 0,
-    },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Admin',
-    },
-    updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Admin',
-    },
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    title: { type: DataTypes.STRING, allowNull: false },
+    placement: { type: DataTypes.STRING, defaultValue: '' },
+    description: { type: DataTypes.TEXT, defaultValue: '' },
+    mediaType: { type: DataTypes.STRING, defaultValue: 'image' },
+    desktopBanner: { type: DataTypes.STRING, allowNull: false },
+    tabletBanner: { type: DataTypes.STRING, defaultValue: '' },
+    mobileBanner: { type: DataTypes.STRING, defaultValue: '' },
+    linkUrl: { type: DataTypes.STRING, defaultValue: '' },
+    target: { type: DataTypes.STRING, defaultValue: '_self' },
+    altText: { type: DataTypes.STRING, defaultValue: '' },
+    caption: { type: DataTypes.STRING, defaultValue: '' },
+    subCaption: { type: DataTypes.STRING, defaultValue: '' },
+    buttonText: { type: DataTypes.STRING, defaultValue: '' },
+    isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+    startDate: { type: DataTypes.DATE, allowNull: true },
+    endDate: { type: DataTypes.DATE, allowNull: true },
+    order: { type: DataTypes.INTEGER, defaultValue: 0 },
+    createdBy: { type: DataTypes.UUID, allowNull: true },
+    updatedBy: { type: DataTypes.UUID, allowNull: true },
   },
-  { timestamps: true }
+  { tableName: 'banners', timestamps: true }
 );
 
-const Banner = mongoose.model('Banner', bannerSchema);
-
-module.exports = Banner;
+module.exports = wrapModel(BannerModel);

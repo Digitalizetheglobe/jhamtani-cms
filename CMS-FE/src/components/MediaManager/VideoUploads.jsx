@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaUpload, FaSearch, FaPlay, FaPause } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaPlay } from 'react-icons/fa';
+import CircularProgress from '@mui/material/CircularProgress';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
+import PageShell from '../PageShell';
+import { PageHero, StatCards, EmptyState } from '../PageHero';
 
 const VideoUploads = () => {
   const [videos, setVideos] = useState([]);
@@ -147,198 +151,192 @@ const VideoUploads = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const stats = [
+    { label: 'Videos', value: videos.length, hint: 'This page' },
+    { label: 'Active', value: videos.filter((v) => v.isActive).length, hint: 'Visible' },
+    { label: 'Showing', value: filteredVideos.length, hint: 'Current search' },
+    { label: 'Pages', value: totalPages, hint: 'Pagination' },
+  ];
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Video Uploads Management</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-        >
-          <FaPlus /> Upload New Video
+    <PageShell>
+    <div className="space-y-5 sm:space-y-6">
+      <PageHero
+        kicker="Media"
+        title="Video uploads"
+        subtitle="Hosted videos for the public site."
+      >
+        <button type="button" onClick={() => fetchVideos(currentPage)} className="cms-btn-outline">
+          Refresh
         </button>
-      </div>
+        <button type="button" onClick={() => setShowModal(true)} className="cms-btn-primary">
+          <FaPlus /> Upload video
+        </button>
+      </PageHero>
 
-      {/* Search and Filters */}
-      <div className="mb-6 flex gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search videos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+      <StatCards items={stats} />
+
+      <div className="cms-card p-4 sm:p-5">
+        <div className="relative">
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search videos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="cms-input pl-10"
+          />
         </div>
       </div>
 
-      {/* Videos Grid */}
       {loading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="cms-card p-16 flex flex-col items-center justify-center">
+          <CircularProgress sx={{ color: '#C5A880' }} />
+          <p className="mt-4 text-[#5B584C] text-sm">Loading videos...</p>
         </div>
+      ) : filteredVideos.length === 0 ? (
+        <EmptyState
+          icon={VideoLibraryIcon}
+          title="No videos yet"
+          message={searchTerm ? 'Nothing matches this search.' : 'Upload the first video.'}
+          action={
+            <button type="button" onClick={() => setShowModal(true)} className="cms-btn-primary">
+              <FaPlus /> Upload video
+            </button>
+          }
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-3">
           {filteredVideos.map((video) => (
-            <div key={video._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="relative">
-                <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-                  <FaPlay className="text-4xl text-gray-400" />
+            <article
+              key={video._id}
+              className="cms-card p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4"
+            >
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                <div className="w-14 h-14 rounded-xl bg-[#191f26] text-[#C5A880] flex items-center justify-center flex-shrink-0">
+                  <FaPlay />
                 </div>
-                
-
-              </div>
-              
-              <div className="p-4">
-                <h3 className="font-semibold text-lg mb-2">{video.title || 'Untitled'}</h3>
-                {video.description && (
-                  <p className="text-gray-600 text-sm mb-2">{video.description}</p>
-                )}
-                
-                <div className="flex items-center gap-2 mb-3">
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    video.isActive 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {video.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-                
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(video)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm"
-                  >
-                    <FaEdit className="inline mr-1" /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(video._id)}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm"
-                  >
-                    <FaTrash className="inline mr-1" /> Delete
-                  </button>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-[#191f26] truncate">{video.title || 'Untitled'}</h3>
+                  {video.description && (
+                    <p className="text-sm text-[#5B584C] line-clamp-2">{video.description}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`text-[11px] px-2.5 py-1 rounded-full ${
+                        video.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      {video.isActive ? 'Active' : 'Hidden'}
+                    </span>
+                    {video.fileSize ? (
+                      <span className="text-[11px] text-gray-500">{formatFileSize(video.fileSize)}</span>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-            </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => handleEdit(video)} className="cms-btn-primary !px-4">
+                  <FaEdit className="inline mr-1" /> Edit
+                </button>
+                <button type="button" onClick={() => handleDelete(video._id)} className="cms-btn-outline !px-4">
+                  <FaTrash className="inline mr-1" /> Delete
+                </button>
+              </div>
+            </article>
           ))}
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center mt-8">
-          <div className="flex gap-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => fetchVideos(page)}
-                className={`px-3 py-2 rounded ${
-                  currentPage === page
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
+        <div className="cms-card p-4 flex flex-wrap justify-center gap-2">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              type="button"
+              onClick={() => fetchVideos(page)}
+              className={`px-3 py-2 rounded-xl text-sm font-medium ${
+                currentPage === page
+                  ? 'bg-[#C5A880] text-[#191f26]'
+                  : 'bg-[#f5f3ef] text-[#5B584C] hover:bg-[#C5A880]/20'
+              }`}
+            >
+              {page}
+            </button>
+          ))}
         </div>
       )}
 
-      {/* Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">
-              {editingVideo ? 'Edit Video' : 'Upload New Video'}
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 className="font-display text-2xl text-[#191f26] mb-4">
+              {editingVideo ? 'Edit video' : 'Upload video'}
             </h2>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Video File
-                </label>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Video file</label>
                 <input
                   type="file"
                   accept="video/*"
                   onChange={handleVideoFileChange}
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  className="cms-input"
                   required={!editingVideo}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Supported formats: MP4, AVI, MOV, WMV, FLV, WebM. Max size: 500MB
-                </p>
+                <p className="text-xs text-[#5B584C] mt-1">MP4, AVI, MOV, WMV, FLV, WebM. Max 500MB</p>
               </div>
 
-
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title
-                </label>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Title</label>
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="cms-input"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Description</label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="cms-input"
                   placeholder="Enter video description"
                   rows="3"
                 />
               </div>
 
-              <div className="flex items-center">
+              <label className="flex items-center gap-2 text-sm text-[#5B584C]">
                 <input
                   type="checkbox"
-                  id="isActive"
                   checked={formData.isActive}
-                  onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
-                  className="mr-2"
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                 />
-                <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
-                  Active
-                </label>
-              </div>
+                Active
+              </label>
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg disabled:opacity-50"
-                >
-                  {loading ? 'Saving...' : (editingVideo ? 'Update' : 'Upload')}
-                </button>
+              <div className="flex gap-2 pt-4 border-t border-[#C5A880]/20">
                 <button
                   type="button"
                   onClick={() => {
                     setShowModal(false);
                     setEditingVideo(null);
-                    setFormData({
-                      title: '',
-                      description: '',
-                      isActive: true
-                    });
+                    setFormData({ title: '', description: '', isActive: true });
                     setSelectedFile(null);
-
                   }}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg"
+                  className="flex-1 cms-btn-outline"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 cms-btn-primary disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : (editingVideo ? 'Update' : 'Upload')}
                 </button>
               </div>
             </form>
@@ -346,6 +344,7 @@ const VideoUploads = () => {
         </div>
       )}
     </div>
+    </PageShell>
   );
 };
 

@@ -1,23 +1,28 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
+const { wrapModel } = require('./mongooseCompat');
 
-const videoUploadSchema = new mongoose.Schema({
-  title: { type: String },
-  description: { type: String },
-  videoUrl: { type: String },
-  thumbnailUrl: { type: String },
-  duration: { type: Number }, // in seconds
-  fileSize: { type: Number }, // in bytes
-  format: { type: String },
-  resolution: { type: String },
-  category: { type: String },
-  tags: [String],
-  isActive: { type: Boolean, default: true },
-  order: { type: Number, default: 0 },
-  uploadedBy: { type: String },
-  views: { type: Number, default: 0 },
-  isPublic: { type: Boolean, default: true }
-}, {
-  timestamps: true
-});
+const VideoUploadModel = sequelize.define(
+  'VideoUpload',
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    title: { type: DataTypes.STRING, allowNull: true },
+    description: { type: DataTypes.TEXT, allowNull: true },
+    videoUrl: { type: DataTypes.STRING, allowNull: true },
+    thumbnailUrl: { type: DataTypes.STRING, allowNull: true },
+    duration: { type: DataTypes.INTEGER, allowNull: true },
+    fileSize: { type: DataTypes.INTEGER, allowNull: true },
+    format: { type: DataTypes.STRING, allowNull: true },
+    resolution: { type: DataTypes.STRING, allowNull: true },
+    category: { type: DataTypes.STRING, allowNull: true },
+    tags: { type: DataTypes.JSONB, defaultValue: [] },
+    isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+    order: { type: DataTypes.INTEGER, defaultValue: 0 },
+    uploadedBy: { type: DataTypes.STRING, allowNull: true },
+    views: { type: DataTypes.INTEGER, defaultValue: 0 },
+    isPublic: { type: DataTypes.BOOLEAN, defaultValue: true },
+  },
+  { tableName: 'video_uploads', timestamps: true }
+);
 
-module.exports = mongoose.model('VideoUpload', videoUploadSchema);
+module.exports = wrapModel(VideoUploadModel);

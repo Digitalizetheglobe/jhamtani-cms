@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Typography, Button, Card, CardContent, Grid,
-  IconButton, Chip, Dialog, DialogActions, DialogContent,
-  DialogContentText, DialogTitle, CircularProgress, Alert,
-  Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, TextField, Select, MenuItem, FormControl,
-  InputLabel, Avatar, Switch, FormControlLabel
+  Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
+  CircularProgress, Alert, Avatar, Switch, FormControlLabel,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import PersonIcon from '@mui/icons-material/Person';
+import SearchIcon from '@mui/icons-material/Search';
+import PageShell from '../components/PageShell';
+import { PageHero, StatCards, EmptyState } from '../components/PageHero';
 
 /**
  * TeamManagement Component
@@ -56,7 +54,7 @@ const TeamManagement = () => {
     setError(null);
 
     try {
-      const response = await fetch('https://api.risingspaces.in/api/team');
+      const response = await fetch('http://localhost:5000/api/team');
       if (!response.ok) {
         throw new Error('Failed to load team members');
       }
@@ -131,7 +129,7 @@ const TeamManagement = () => {
         linkedinUrl: member.linkedinUrl || '',
         isActive: member.isActive
       });
-      setPhotoPreview(member.photo ? `https://api.risingspaces.in/uploads/team/${member.photo}` : null);
+      setPhotoPreview(member.photo ? `http://localhost:5000/uploads/team/${member.photo}` : null);
     } else {
       setEditingMember(null);
       setFormData({
@@ -248,13 +246,13 @@ const TeamManagement = () => {
         formDataToSend.append('linkedinUrl', normalizedFormData.linkedinUrl);
         formDataToSend.append('isActive', formData.isActive);
 
-        response = await fetch(`https://api.risingspaces.in/api/team${editingMember ? `/${editingMember._id}` : ''}`, {
+        response = await fetch(`http://localhost:5000/api/team${editingMember ? `/${editingMember._id}` : ''}`, {
           method: editingMember ? 'PUT' : 'POST',
           body: formDataToSend
         });
       } else {
         // Upload without photo
-        response = await fetch(`https://api.risingspaces.in/api/team${editingMember ? `/${editingMember._id}` : ''}`, {
+        response = await fetch(`http://localhost:5000/api/team${editingMember ? `/${editingMember._id}` : ''}`, {
           method: editingMember ? 'PUT' : 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -280,7 +278,7 @@ const TeamManagement = () => {
   // Confirm delete
   const confirmDelete = async () => {
     try {
-      const response = await fetch(`https://api.risingspaces.in/api/team/${memberToDelete._id}`, {
+      const response = await fetch(`http://localhost:5000/api/team/${memberToDelete._id}`, {
         method: 'DELETE'
       });
 
@@ -300,7 +298,7 @@ const TeamManagement = () => {
   // Toggle active status
   const toggleStatus = async (member) => {
     try {
-      const response = await fetch(`https://api.risingspaces.in/api/team/${member._id}/toggle-status`, {
+      const response = await fetch(`http://localhost:5000/api/team/${member._id}/toggle-status`, {
         method: 'PATCH'
       });
 
@@ -320,377 +318,246 @@ const TeamManagement = () => {
 
   if (loading && teamMembers.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <CircularProgress />
-      </div>
+      <PageShell>
+        <div className="cms-card p-16 flex flex-col items-center justify-center">
+          <CircularProgress sx={{ color: '#C5A880' }} />
+          <p className="mt-4 text-[#5B584C] text-sm">Loading team...</p>
+        </div>
+      </PageShell>
     );
   }
 
-  return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Team Management</h1>
-          <p className="text-gray-600 mt-2">
-            Manage your team members and their profiles. Add new members, edit existing ones, and keep your team information up to date.
-          </p>
-        </div>
-        <div className="flex space-x-3 mt-4 md:mt-0">
-          <Button
-            variant="outlined"
-            className="border-blue-600 text-blue-600 hover:bg-blue-50"
-            startIcon={<RefreshIcon />}
-            onClick={fetchTeamMembers}
-          >
-            Refresh
-          </Button>
-          <Button
-            variant="contained"
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-            startIcon={<AddIcon />}
-            onClick={() => openFormDialog()}
-          >
-            Add Team Member
-          </Button>
-        </div>
-      </div>
+  const stats = [
+    { label: 'Members', value: teamMembers.length, hint: 'All profiles' },
+    { label: 'Active', value: teamMembers.filter((m) => m.isActive).length, hint: 'Visible on site' },
+    { label: 'Inactive', value: teamMembers.filter((m) => !m.isActive).length, hint: 'Hidden' },
+    { label: 'Showing', value: filteredMembers.length, hint: 'Current filters' },
+  ];
 
-      {/* Search and Filter Section */}
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <TextField
-              fullWidth
-              placeholder="Search team members..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="rounded-lg"
-            />
-          </div>
-          <FormControl className="min-w-[200px]">
-            <InputLabel>Filter by Status</InputLabel>
-            <Select
+  return (
+    <PageShell>
+      <div className="space-y-5 sm:space-y-6">
+        <PageHero
+          kicker="Our People"
+          title="Team"
+          subtitle="Manage team members and their profiles for the public site."
+        >
+          <button type="button" onClick={fetchTeamMembers} className="cms-btn-outline">
+            <RefreshIcon className="w-4 h-4" />
+            Refresh
+          </button>
+          <button type="button" onClick={() => openFormDialog()} className="cms-btn-primary">
+            <AddIcon className="w-4 h-4" />
+            Add member
+          </button>
+        </PageHero>
+
+        <StatCards items={stats} />
+
+        <div className="cms-card p-4 sm:p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="relative sm:col-span-2">
+              <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search by name or designation..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="cms-input pl-10"
+              />
+            </div>
+            <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              label="Filter by Status"
+              className="cms-input cursor-pointer"
             >
-              <MenuItem value="all">All Members</MenuItem>
-              <MenuItem value="active">Active</MenuItem>
-              <MenuItem value="inactive">Inactive</MenuItem>
-            </Select>
-          </FormControl>
-        </div>
-      </div>
-
-      {/* Error Alert */}
-      {error && (
-        <div className="mb-6">
-          <Alert severity="error" className="rounded-lg shadow-sm">
-            {error}
-          </Alert>
-        </div>
-      )}
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <Card className="bg-white rounded-xl shadow-sm">
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Total Members
-            </Typography>
-            <Typography variant="h4" className="text-blue-600 font-bold">
-              {teamMembers.length}
-            </Typography>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-xl shadow-sm">
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Active Members
-            </Typography>
-            <Typography variant="h4" className="text-green-600 font-bold">
-              {teamMembers.filter(m => m.isActive).length}
-            </Typography>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-xl shadow-sm">
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Inactive Members
-            </Typography>
-            <Typography variant="h4" className="text-gray-600 font-bold">
-              {teamMembers.filter(m => !m.isActive).length}
-            </Typography>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-xl shadow-sm">
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Filtered Results
-            </Typography>
-            <Typography variant="h4" className="text-purple-600 font-bold">
-              {filteredMembers.length}
-            </Typography>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Team Members Table */}
-      {filteredMembers.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-          <PersonIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-lg font-medium text-gray-900">No team members found</h3>
-          <p className="mt-1 text-gray-500">
-            {searchTerm || filterStatus !== 'all'
-              ? 'Try adjusting your search or filter criteria'
-              : 'Get started by adding your first team member'}
-          </p>
-          <div className="mt-6">
-            <Button
-              variant="contained"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              startIcon={<AddIcon />}
-              onClick={() => openFormDialog()}
-            >
-              Add Team Member
-            </Button>
+              <option value="all">All members</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
           </div>
         </div>
-      ) : (
-        <Card className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow className="bg-gray-50">
-                  <TableCell className="font-semibold">Photo</TableCell>
-                  <TableCell className="font-semibold">Name & Designation</TableCell>
-                  <TableCell className="font-semibold">Description</TableCell>
-                  <TableCell className="font-semibold">LinkedIn</TableCell>
-                  <TableCell className="font-semibold">Status</TableCell>
-                  <TableCell className="font-semibold">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredMembers.map((member) => (
-                  <TableRow key={member._id || Math.random()} className="hover:bg-gray-50">
-                    <TableCell>
-                      <Avatar
-                        src={member.photo ? `https://api.risingspaces.in/uploads/team/${member.photo}` : undefined}
-                        className="w-12 h-12"
+
+        {error && (
+          <Alert severity="error" className="rounded-xl" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
+        {filteredMembers.length === 0 ? (
+          <EmptyState
+            icon={PersonIcon}
+            title="No team members yet"
+            message={
+              searchTerm || filterStatus !== 'all'
+                ? 'Nothing matches these filters. Clear search and try again.'
+                : 'Add the first profile to show on the public website.'
+            }
+            action={
+              <button type="button" onClick={() => openFormDialog()} className="cms-btn-primary">
+                <AddIcon className="w-4 h-4" />
+                Add member
+              </button>
+            }
+          />
+        ) : (
+          <div className="space-y-3">
+            {filteredMembers.map((member) => (
+              <article
+                key={member._id}
+                className="cms-card p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4"
+              >
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <Avatar
+                    src={member.photo ? `http://localhost:5000/uploads/team/${member.photo}` : undefined}
+                    className="!w-12 !h-12 !bg-[#C5A880]/20 !text-[#A0725B]"
+                  >
+                    {member.fullName ? member.fullName.charAt(0) : '?'}
+                  </Avatar>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-[#191f26] truncate">{member.fullName}</h3>
+                    <p className="text-sm text-[#5B584C] truncate">{member.designation}</p>
+                    {member.description && (
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{member.description}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span
+                        className={`text-[11px] px-2.5 py-1 rounded-full ${
+                          member.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'
+                        }`}
                       >
-                        {member.fullName ? member.fullName.charAt(0) : '?'}
-                      </Avatar>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium text-gray-900">{member.fullName || 'Unknown Name'}</div>
-                        <div className="text-sm text-gray-500">{member.designation || 'Unknown Designation'}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="max-w-xs">
-                        <div className="text-sm text-gray-700 line-clamp-2">
-                          {member.description || 'No description provided'}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {member.linkedinUrl ? (
+                        {member.isActive ? 'Active' : 'Hidden'}
+                      </span>
+                      {member.linkedinUrl && (
                         <a
                           href={member.linkedinUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800"
+                          className="text-[11px] text-[#A0725B] hover:underline"
                         >
-                          <LinkedInIcon />
+                          LinkedIn
                         </a>
-                      ) : (
-                        <span className="text-gray-400">-</span>
                       )}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={member.isActive ? 'Active' : 'Inactive'}
-                        color={member.isActive ? 'success' : 'default'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <IconButton
-                          size="small"
-                          onClick={() => openMemberDetail(member)}
-                          className="text-blue-600 hover:bg-blue-50"
-                          title="View Details"
-                        >
-                          <VisibilityIcon />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => openFormDialog(member)}
-                          className="text-yellow-600 hover:bg-yellow-50"
-                          title="Edit Member"
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => openDeleteDialog(member)}
-                          className="text-red-600 hover:bg-red-50"
-                          title="Delete Member"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Card>
-      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" onClick={() => openMemberDetail(member)} className="cms-btn-outline !px-4">
+                    <VisibilityIcon className="w-4 h-4" />
+                    View
+                  </button>
+                  <button type="button" onClick={() => openFormDialog(member)} className="cms-btn-primary !px-4">
+                    <EditIcon className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button type="button" onClick={() => openDeleteDialog(member)} className="cms-btn-outline !px-4">
+                    <DeleteIcon className="w-4 h-4" />
+                    Delete
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
 
-      {/* Member Detail Dialog */}
       <Dialog
         open={detailDialogOpen}
         onClose={closeMemberDetail}
         maxWidth="md"
         fullWidth
-        PaperProps={{
-          className: "rounded-xl"
-        }}
+        PaperProps={{ className: '!rounded-2xl' }}
       >
-        <DialogTitle className="text-lg font-semibold text-gray-800">
-          Team Member Details
+        <DialogTitle className="!font-display !text-2xl text-[#191f26]">
+          Team member details
         </DialogTitle>
         <DialogContent>
           {selectedMember && (
-            <div className="space-y-6">
-              <div className="flex items-center space-x-4">
+            <div className="space-y-5 pt-2">
+              <div className="bg-[#f5f3ef] p-4 rounded-xl flex items-center gap-4">
                 <Avatar
-                  src={selectedMember.photo ? `https://api.risingspaces.in/uploads/team/${selectedMember.photo}` : undefined}
-                  className="w-20 h-20"
+                  src={selectedMember.photo ? `http://localhost:5000/uploads/team/${selectedMember.photo}` : undefined}
+                  className="!w-16 !h-16 !bg-[#C5A880]/20 !text-[#A0725B]"
                 >
                   {selectedMember.fullName ? selectedMember.fullName.charAt(0) : '?'}
                 </Avatar>
                 <div>
-                  <Typography variant="h5" className="font-semibold">
+                  <h3 className="font-semibold text-[#191f26] text-lg">
                     {selectedMember.fullName || 'Unknown Name'}
-                  </Typography>
-                  <Typography variant="subtitle1" className="text-gray-600">
+                  </h3>
+                  <p className="text-sm text-[#5B584C]">
                     {selectedMember.designation || 'Unknown Designation'}
-                  </Typography>
-                  <Chip
-                    label={selectedMember.isActive ? 'Active' : 'Inactive'}
-                    color={selectedMember.isActive ? 'success' : 'default'}
-                    className="mt-2"
-                  />
+                  </p>
+                  <span
+                    className={`mt-2 inline-flex text-[11px] px-2.5 py-1 rounded-full ${
+                      selectedMember.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {selectedMember.isActive ? 'Active' : 'Hidden'}
+                  </span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                    Full Name
-                  </Typography>
-                  <Typography variant="body1" className="text-gray-800">
-                    {selectedMember.fullName || 'Not provided'}
-                  </Typography>
+                  <span className="block text-[#5B584C] text-xs uppercase tracking-wider font-semibold">Full name</span>
+                  <span className="font-semibold text-[#191f26]">{selectedMember.fullName || 'Not provided'}</span>
                 </div>
                 <div>
-                  <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                    Designation
-                  </Typography>
-                  <Typography variant="body1" className="text-gray-800">
-                    {selectedMember.designation || 'Not provided'}
-                  </Typography>
+                  <span className="block text-[#5B584C] text-xs uppercase tracking-wider font-semibold">Designation</span>
+                  <span className="font-semibold text-[#191f26]">{selectedMember.designation || 'Not provided'}</span>
                 </div>
-                <div className="col-span-2">
-                  <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                    Description
-                  </Typography>
-                  <Typography variant="body1" className="text-gray-800">
-                    {selectedMember.description || 'Not provided'}
-                  </Typography>
+                <div className="sm:col-span-2">
+                  <span className="block text-[#5B584C] text-xs uppercase tracking-wider font-semibold">Description</span>
+                  <span className="text-[#191f26]">{selectedMember.description || 'Not provided'}</span>
                 </div>
                 <div>
-                  <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                    LinkedIn Profile
-                  </Typography>
-                  <Typography variant="body1" className="text-gray-800">
-                    {selectedMember.linkedinUrl ? (
-                      <a
-                        href={selectedMember.linkedinUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        View Profile
-                      </a>
-                    ) : (
-                      'Not provided'
-                    )}
-                  </Typography>
+                  <span className="block text-[#5B584C] text-xs uppercase tracking-wider font-semibold">LinkedIn</span>
+                  {selectedMember.linkedinUrl ? (
+                    <a
+                      href={selectedMember.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-[#A0725B] hover:underline"
+                    >
+                      View profile
+                    </a>
+                  ) : (
+                    <span className="text-[#191f26]">Not provided</span>
+                  )}
                 </div>
                 <div>
-                  <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                    Member ID
-                  </Typography>
-                  <Typography variant="body1" className="text-gray-800 font-mono">
-                    {selectedMember._id}
-                  </Typography>
-                </div>
-                <div>
-                  <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                    Created On
-                  </Typography>
-                  <Typography variant="body1" className="text-gray-800">
-                    {new Date(selectedMember.createdAt).toLocaleDateString()}
-                  </Typography>
-                </div>
-                <div>
-                  <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                    Last Updated
-                  </Typography>
-                  <Typography variant="body1" className="text-gray-800">
-                    {new Date(selectedMember.updatedAt).toLocaleDateString()}
-                  </Typography>
+                  <span className="block text-[#5B584C] text-xs uppercase tracking-wider font-semibold">Created</span>
+                  <span className="font-semibold text-[#191f26]">
+                    {selectedMember.createdAt ? new Date(selectedMember.createdAt).toLocaleDateString() : '—'}
+                  </span>
                 </div>
               </div>
             </div>
           )}
         </DialogContent>
-        <DialogActions className="px-6 py-4 border-t border-gray-200">
-          <Button onClick={closeMemberDetail} className="text-gray-600">
+        <DialogActions className="!p-4 !border-t !border-[#C5A880]/20">
+          <button type="button" onClick={closeMemberDetail} className="cms-btn-primary">
             Close
-          </Button>
+          </button>
         </DialogActions>
       </Dialog>
 
-      {/* Form Dialog for Create/Edit */}
       <Dialog
         open={formDialogOpen}
         onClose={closeFormDialog}
         maxWidth="md"
         fullWidth
-        PaperProps={{
-          className: "rounded-xl"
-        }}
+        PaperProps={{ className: '!rounded-2xl' }}
       >
-        <DialogTitle className="text-lg font-semibold text-gray-800">
-          {editingMember ? 'Edit Team Member' : 'Add New Team Member'}
+        <DialogTitle className="!font-display !text-2xl text-[#191f26]">
+          {editingMember ? 'Edit team member' : 'Add team member'}
         </DialogTitle>
         <form onSubmit={handleFormSubmit}>
           <DialogContent>
-            <div className="space-y-4">
-              {/* Photo Upload */}
-              <div className="flex items-center space-x-4">
-                <Avatar
-                  src={photoPreview}
-                  className="w-20 h-20"
-                >
+            <div className="space-y-4 pt-1">
+              <div className="flex items-center gap-4">
+                <Avatar src={photoPreview} className="!w-20 !h-20 !bg-[#C5A880]/20 !text-[#A0725B]">
                   <PhotoCameraIcon />
                 </Avatar>
                 <div>
@@ -701,114 +568,111 @@ const TeamManagement = () => {
                     onChange={handlePhotoChange}
                     className="hidden"
                   />
-                  <label htmlFor="photo-upload">
-                    <Button
-                      variant="outlined"
-                      component="span"
-                      startIcon={<PhotoCameraIcon />}
-                    >
-                      Upload Photo
-                    </Button>
+                  <label htmlFor="photo-upload" className="cms-btn-outline inline-flex cursor-pointer">
+                    <PhotoCameraIcon className="w-4 h-4" />
+                    Upload photo
                   </label>
-                  <Typography variant="caption" className="block text-gray-500 mt-1">
+                  <p className="text-xs text-[#5B584C] mt-1">
                     {editingMember ? 'Leave empty to keep current photo' : 'Photo is required for new members'}
-                  </Typography>
+                  </p>
                 </div>
               </div>
 
-              {/* Form Fields */}
-              <TextField
-                fullWidth
-                label="Full Name"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                required
-              />
-              <TextField
-                fullWidth
-                label="Designation"
-                value={formData.designation}
-                onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                required
-              />
-              <TextField
-                fullWidth
-                label="Description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                multiline
-                rows={3}
-                placeholder="Brief description about the team member..."
-              />
-              <TextField
-                fullWidth
-                label="LinkedIn URL"
-                value={formData.linkedinUrl}
-                onChange={handleLinkedInUrlChange}
-                placeholder="https://linkedin.com/in/username"
-                error={!!linkedinUrlError}
-                helperText={linkedinUrlError || (formData.linkedinUrl && validateLinkedInUrl(formData.linkedinUrl) ? "✓ Valid LinkedIn URL" : "Optional: Enter a valid LinkedIn profile URL")}
-                InputProps={{
-                  endAdornment: formData.linkedinUrl && validateLinkedInUrl(formData.linkedinUrl) ? (
-                    <span style={{ color: 'green', fontSize: '20px' }}>✓</span>
-                  ) : null
-                }}
-              />
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Full name</label>
+                <input
+                  type="text"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  className="cms-input"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Designation</label>
+                <input
+                  type="text"
+                  value={formData.designation}
+                  onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                  className="cms-input"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="cms-input"
+                  rows={3}
+                  placeholder="Brief description about the team member..."
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">LinkedIn URL</label>
+                <input
+                  type="url"
+                  value={formData.linkedinUrl}
+                  onChange={handleLinkedInUrlChange}
+                  className={`cms-input ${linkedinUrlError ? 'border-red-400' : ''}`}
+                  placeholder="https://linkedin.com/in/username"
+                />
+                <p className={`text-xs mt-1 ${linkedinUrlError ? 'text-red-600' : 'text-[#5B584C]'}`}>
+                  {linkedinUrlError
+                    || (formData.linkedinUrl && validateLinkedInUrl(formData.linkedinUrl)
+                      ? 'Valid LinkedIn URL'
+                      : 'Optional: Enter a valid LinkedIn profile URL')}
+                </p>
+              </div>
               <FormControlLabel
                 control={
                   <Switch
                     checked={formData.isActive}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    sx={{
+                      '& .MuiSwitch-switchBase.Mui-checked': { color: '#C5A880' },
+                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#C5A880' },
+                    }}
                   />
                 }
-                label="Active Member"
+                label="Active member"
               />
             </div>
           </DialogContent>
-          <DialogActions className="px-6 py-4 border-t border-gray-200">
-            <Button onClick={closeFormDialog} className="text-gray-600">
+          <DialogActions className="!p-4 !border-t !border-[#C5A880]/20 gap-2">
+            <button type="button" onClick={closeFormDialog} className="cms-btn-outline">
               Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
+            </button>
+            <button type="submit" className="cms-btn-primary">
               {editingMember ? 'Update' : 'Create'}
-            </Button>
+            </button>
           </DialogActions>
         </form>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={closeDeleteDialog}
-        PaperProps={{
-          className: "rounded-xl"
-        }}
+        PaperProps={{ className: '!rounded-2xl' }}
       >
-        <DialogTitle className="text-lg font-semibold text-gray-800">
-          Confirm Delete
+        <DialogTitle className="!text-lg !font-semibold text-[#191f26]">
+          Delete team member
         </DialogTitle>
         <DialogContent>
-          <DialogContentText className="text-gray-600">
-            Are you sure you want to delete "{memberToDelete?.fullName || 'this team member'}"? This action cannot be undone.
+          <DialogContentText className="!text-[#5B584C]">
+            Remove "{memberToDelete?.fullName || 'this team member'}" permanently? This cannot be undone.
           </DialogContentText>
         </DialogContent>
-        <DialogActions className="px-6 py-4 border-t border-gray-200">
-          <Button onClick={closeDeleteDialog} className="text-gray-600">
+        <DialogActions className="!p-4 gap-2">
+          <button type="button" onClick={closeDeleteDialog} className="cms-btn-outline">
             Cancel
-          </Button>
-          <Button
-            onClick={confirmDelete}
-            className="bg-red-600 hover:bg-red-700 text-white"
-          >
+          </button>
+          <button type="button" onClick={confirmDelete} className="cms-btn-primary">
             Delete
-          </Button>
+          </button>
         </DialogActions>
       </Dialog>
-    </div>
+    </PageShell>
   );
 };
 

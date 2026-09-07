@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FiEye, FiEdit2, FiTrash2, FiSearch, FiCalendar, FiClock, FiTag, FiHeart, FiMessageCircle } from 'react-icons/fi';
+import { FiEye, FiEdit2, FiTrash2, FiSearch, FiCalendar, FiClock } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import CircularProgress from '@mui/material/CircularProgress';
+import PageShell from '../components/PageShell';
+import { PageHero, StatCards, EmptyState } from '../components/PageHero';
 
 const BlogList = () => {
   const navigate = useNavigate();
@@ -14,7 +17,7 @@ const BlogList = () => {
   const fetchBlogs = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://api.risingspaces.in/api/blogs/');
+      const response = await fetch('http://localhost:5000/api/blogs/');
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -51,7 +54,7 @@ const BlogList = () => {
   const handleDelete = async (blogId) => {
     if (window.confirm('Are you sure you want to delete this blog?')) {
       try {
-        const response = await fetch(`https://api.risingspaces.in/api/blogs/${blogId}`, {
+        const response = await fetch(`http://localhost:5000/api/blogs/${blogId}`, {
           method: 'DELETE',
         });
 
@@ -105,256 +108,173 @@ const BlogList = () => {
     }
   };
 
+  const stats = [
+    { label: 'Blogs', value: blogs.length, hint: 'All stories' },
+    { label: 'Published', value: blogs.filter((b) => b.isPublished).length, hint: 'Live on site' },
+    { label: 'Drafts', value: blogs.filter((b) => !b.isPublished).length, hint: 'Unpublished' },
+    { label: 'Showing', value: filteredBlogs.length, hint: 'Current filters' },
+  ];
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-center items-center h-64">
-            <div className="w-12 h-12 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin"></div>
-          </div>
+      <PageShell>
+        <div className="cms-card p-16 flex flex-col items-center justify-center">
+          <CircularProgress sx={{ color: '#C5A880' }} />
+          <p className="mt-4 text-[#5B584C] text-sm">Loading blogs...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            <strong className="font-bold">Error: </strong>
-            <span className="block sm:inline">{error}</span>
-          </div>
-        </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
-            <h1 className="text-3xl font-bold">Blog Management</h1>
-            <p className="opacity-90 mt-2">Manage and view all your blog posts</p>
+    <PageShell>
+      <div className="space-y-5 sm:space-y-6">
+        <PageHero
+          kicker="Jhamtani Perspectives"
+          title="Blog"
+          subtitle="Stories that inspire ideas that build tomorrow."
+        >
+          <button type="button" onClick={fetchBlogs} className="cms-btn-outline">
+            Refresh
+          </button>
+          <button type="button" onClick={() => navigate('/blog-management/create')} className="cms-btn-primary">
+            + New post
+          </button>
+        </PageHero>
+
+        <StatCards items={stats} />
+
+        {error && (
+          <div className="cms-card p-4 text-sm text-red-700 bg-red-50 border border-red-100">
+            Error: {error}
+          </div>
+        )}
+
+        <div className="cms-card p-4 sm:p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="relative sm:col-span-2">
+              <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search blogs..."
+                className="cms-input pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <select
+              className="cms-input cursor-pointer"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="all">All status</option>
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+            </select>
           </div>
         </div>
 
-        {/* Filters and Search */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-col md:flex-row gap-4 flex-1">
-              {/* Search */}
-              <div className="relative flex-1 max-w-md">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search blogs..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-
-              {/* Status Filter */}
-              <select
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-              >
-                <option value="all">All Status</option>
-                <option value="published">Published</option>
-                <option value="draft">Draft</option>
-              </select>
-            </div>
-
-            <div className="text-sm text-gray-600">
-              {filteredBlogs.length} of {blogs.length} blogs
-            </div>
-          </div>
-        </div>
-
-        {/* Blogs Grid */}
         {filteredBlogs.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <div className="text-gray-400 mb-4">
-              <FiSearch className="w-16 h-16 mx-auto" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No blogs found</h3>
-            <p className="text-gray-500">
-              {searchTerm || filterStatus !== 'all'
-                ? 'Try adjusting your search or filter criteria'
-                : 'No blogs have been created yet'
-              }
-            </p>
-          </div>
+          <EmptyState
+            icon={FiSearch}
+            title="No blogs yet"
+            message={
+              searchTerm || filterStatus !== 'all'
+                ? 'Nothing matches these filters. Clear search and try again.'
+                : 'Write the first perspective for the public site.'
+            }
+            action={
+              <button type="button" onClick={() => navigate('/blog-management/create')} className="cms-btn-primary">
+                + New post
+              </button>
+            }
+          />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-3">
             {filteredBlogs.map((blog) => {
               const tags = parseArrayField(blog.tags);
               const categories = parseArrayField(blog.categories);
 
               return (
-                <div key={blog._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                  {/* Blog Image */}
-                  <div className="relative h-48 bg-gray-200">
-                    {blog.coverImage || blog.uploadImage ? (
-                      <img
-                        src={blog.coverImage || blog.uploadImage}
-                        alt={blog.title}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div className="hidden absolute inset-0 bg-gray-200 items-center justify-center">
-                      <FiEye className="w-12 h-12 text-gray-400" />
+                <article
+                  key={blog._id}
+                  className="cms-card p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4"
+                >
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="w-20 h-14 rounded-xl overflow-hidden bg-[#f5f3ef] flex-shrink-0">
+                      {blog.coverImage || blog.uploadImage ? (
+                        <img
+                          src={blog.coverImage || blog.uploadImage}
+                          alt={blog.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[#C5A880]">
+                          <FiEye className="w-5 h-5" />
+                        </div>
+                      )}
                     </div>
-
-                    {/* Status Badge */}
-                    <div className="absolute top-3 left-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${blog.isPublished
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                        {blog.isPublished ? 'Published' : 'Draft'}
-                      </span>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="absolute top-3 right-3 flex space-x-2">
-                      <button
-                        className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition hover:text-green-600"
-                        onClick={() => handleView(blog._id)}
-                        title="View Blog"
-                      >
-                        <FiEye className="w-4 h-4" />
-                      </button>
-                      <button
-                        className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition hover:text-blue-600"
-                        onClick={() => handleEdit(blog._id)}
-                        title="Edit Blog"
-                      >
-                        <FiEdit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition hover:text-red-600"
-                        onClick={() => handleDelete(blog._id)}
-                        title="Delete Blog"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Blog Content */}
-                  <div className="p-6">
-                    {/* Title */}
-                    <h3
-                      className="text-xl font-bold text-gray-800 mb-2 line-clamp-2 cursor-pointer hover:text-indigo-600 transition"
-                      onClick={() => handleView(blog._id)}
-                      title="Click to view full blog"
-                    >
-                      {blog.title}
-                    </h3>
-
-                    {/* Excerpt */}
-                    <p className="text-gray-600 mb-4 line-clamp-3">
-                      {blog.excerpt}
-                    </p>
-
-                    {/* Meta Information */}
-                    <div className="space-y-3 mb-4">
-                      {/* Date and Read Time */}
-                      <div className="flex items-center text-sm text-gray-500 space-x-4">
-                        <div className="flex items-center">
-                          <FiCalendar className="w-4 h-4 mr-1" />
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-[#191f26] truncate">{blog.title}</h3>
+                      <p className="text-sm text-[#5B584C] line-clamp-2 mt-0.5">{blog.excerpt}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span
+                          className={`text-[11px] px-2.5 py-1 rounded-full ${
+                            blog.isPublished
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {blog.isPublished ? 'Published' : 'Draft'}
+                        </span>
+                        <span className="text-[11px] text-gray-500 flex items-center gap-1">
+                          <FiCalendar className="w-3 h-3" />
                           {formatDate(blog.createdAt)}
-                        </div>
-                        <div className="flex items-center">
-                          <FiClock className="w-4 h-4 mr-1" />
-                          {blog.readTime || 0} min read
-                        </div>
+                        </span>
+                        <span className="text-[11px] text-gray-500 flex items-center gap-1">
+                          <FiClock className="w-3 h-3" />
+                          {blog.readTime || 0} min
+                        </span>
+                        {tags.slice(0, 2).map((tag, index) => (
+                          <span
+                            key={index}
+                            className="text-[11px] px-2.5 py-1 rounded-full bg-[#f5f3ef] text-[#5B584C] border border-[#C5A880]/25"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {categories.slice(0, 1).map((category, index) => (
+                          <span
+                            key={`cat-${index}`}
+                            className="text-[11px] px-2.5 py-1 rounded-full bg-[#C5A880]/15 text-[#A0725B]"
+                          >
+                            {category}
+                          </span>
+                        ))}
                       </div>
-
-                      {/* Stats */}
-                      <div className="flex items-center text-sm text-gray-500 space-x-4">
-                        <div className="flex items-center">
-                          <FiEye className="w-4 h-4 mr-1" />
-                          {blog.views || 0} views
-                        </div>
-                        <div className="flex items-center">
-                          <FiHeart className="w-4 h-4 mr-1" />
-                          {blog.likes || 0} likes
-                        </div>
-                        <div className="flex items-center">
-                          <FiMessageCircle className="w-4 h-4 mr-1" />
-                          {blog.commentsCount || 0} comments
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Tags */}
-                    {tags.length > 0 && (
-                      <div className="mb-3">
-                        <div className="flex items-center mb-2">
-                          <FiTag className="w-4 h-4 text-gray-400 mr-1" />
-                          <span className="text-sm text-gray-500">Tags:</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {tags.slice(0, 3).map((tag, index) => (
-                            <span
-                              key={index}
-                              className="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded-full"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                          {tags.length > 3 && (
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                              +{tags.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Categories */}
-                    {categories.length > 0 && (
-                      <div className="mb-3">
-                        <div className="flex flex-wrap gap-1">
-                          {categories.slice(0, 2).map((category, index) => (
-                            <span
-                              key={index}
-                              className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"
-                            >
-                              {category}
-                            </span>
-                          ))}
-                          {categories.length > 2 && (
-                            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                              +{categories.length - 2} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Slug */}
-                    <div className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
-                      /{blog.slug}
                     </div>
                   </div>
-                </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => handleView(blog._id)} className="cms-btn-outline !px-4">
+                      <FiEye className="w-4 h-4" />
+                      View
+                    </button>
+                    <button type="button" onClick={() => handleEdit(blog._id)} className="cms-btn-primary !px-4">
+                      <FiEdit2 className="w-4 h-4" />
+                      Edit
+                    </button>
+                    <button type="button" onClick={() => handleDelete(blog._id)} className="cms-btn-outline !px-4">
+                      <FiTrash2 className="w-4 h-4" />
+                      Delete
+                    </button>
+                  </div>
+                </article>
               );
             })}
           </div>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 };
 

@@ -47,7 +47,7 @@ const BlogEditForm = () => {
   const fetchBlogData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`https://api.risingspaces.in/api/blogs/${blogId}`);
+      const response = await fetch(`http://localhost:5000/api/blogs/${blogId}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch blog data');
@@ -221,13 +221,13 @@ const BlogEditForm = () => {
       let response;
       if (isEditMode) {
         // Update existing blog
-        response = await fetch(`https://api.risingspaces.in/api/blogs/${blogId}`, {
+        response = await fetch(`http://localhost:5000/api/blogs/${blogId}`, {
           method: 'PUT',
           body: formDataToSend,
         });
       } else {
         // Create new blog
-        response = await fetch('https://api.risingspaces.in/api/blogs', {
+        response = await fetch('http://localhost:5000/api/blogs', {
           method: 'POST',
           body: formDataToSend,
         });
@@ -261,7 +261,7 @@ const BlogEditForm = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="cms-page">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-center items-center h-64">
             <div className="w-12 h-12 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent animate-spin"></div>
@@ -272,23 +272,24 @@ const BlogEditForm = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="cms-page">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
-            <div className="flex items-center justify-between">
+          <div className="bg-[#191f26] p-6 sm:p-8 text-white">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold">
+                <p className="text-[#C5A880] text-xs font-semibold tracking-[0.2em] uppercase">Jhamtani Perspectives</p>
+                <h1 className="font-display text-3xl mt-1">
                   {isEditMode ? 'Edit Blog Post' : 'Create New Blog Post'}
                 </h1>
-                <p className="opacity-90 mt-1">
+                <p className="text-white/70 mt-1 text-sm">
                   {isEditMode ? 'Update your blog post details' : 'Fill in the details below to publish a new blog post'}
                 </p>
               </div>
               <button
                 onClick={() => navigate('/blog-management/list')}
-                className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition"
+                className="cms-btn-outline !border-[#C5A880] !text-[#C5A880]"
               >
                 <FiArrowLeft className="w-4 h-4" />
                 <span>Back to List</span>
@@ -324,7 +325,7 @@ const BlogEditForm = () => {
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition"
                     placeholder="Enter blog title"
                     required
                   />
@@ -338,7 +339,7 @@ const BlogEditForm = () => {
                     name="slug"
                     value={formData.slug}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition"
                     placeholder="Enter URL slug"
                     required
                   />
@@ -352,7 +353,7 @@ const BlogEditForm = () => {
                     value={formData.excerpt}
                     onChange={handleChange}
                     rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition"
                     placeholder="Short description of the blog post"
                     required
                   />
@@ -433,7 +434,7 @@ const BlogEditForm = () => {
                       name="publishedAt"
                       value={formData.publishedAt}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition"
                     />
                   </div>
 
@@ -445,7 +446,7 @@ const BlogEditForm = () => {
                       value={formData.readTime}
                       onChange={handleChange}
                       min="0"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition"
                     />
                   </div>
                 </div>
@@ -460,13 +461,13 @@ const BlogEditForm = () => {
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleTagAdd())}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition"
                         placeholder="Add a tag"
                       />
                       <button
                         type="button"
                         onClick={handleTagAdd}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                        className="cms-btn-primary"
                       >
                         Add
                       </button>
@@ -503,13 +504,13 @@ const BlogEditForm = () => {
                         value={categoryInput}
                         onChange={(e) => setCategoryInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleCategoryAdd())}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition"
                         placeholder="Add a category"
                       />
                       <button
                         type="button"
                         onClick={handleCategoryAdd}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                        className="cms-btn-primary"
                       >
                         Add
                       </button>
@@ -547,7 +548,7 @@ const BlogEditForm = () => {
                       name="metaTitle"
                       value={formData.metaTitle}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition"
                       placeholder="SEO meta title"
                     />
                   </div>
@@ -559,7 +560,7 @@ const BlogEditForm = () => {
                       value={formData.metaDescription}
                       onChange={handleChange}
                       rows="2"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition"
                       placeholder="SEO meta description"
                     />
                   </div>
@@ -571,7 +572,7 @@ const BlogEditForm = () => {
                       name="ogTitle"
                       value={formData.ogTitle}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition"
                       placeholder="Open Graph title"
                     />
                   </div>
@@ -583,7 +584,7 @@ const BlogEditForm = () => {
                       value={formData.ogDescription}
                       onChange={handleChange}
                       rows="2"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition"
                       placeholder="Open Graph description"
                     />
                   </div>
@@ -595,7 +596,7 @@ const BlogEditForm = () => {
                       name="ogImage"
                       value={formData.ogImage}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C5A880] focus:border-[#C5A880] transition"
                       placeholder="Open Graph image URL"
                     />
                   </div>
@@ -608,14 +609,14 @@ const BlogEditForm = () => {
               <button
                 type="button"
                 onClick={() => navigate('/blog-management/list')}
-                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                className="cms-btn-outline"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-lg transition flex items-center space-x-1"
+                className="cms-btn-primary disabled:opacity-50"
               >
                 {saving ? (
                   <>

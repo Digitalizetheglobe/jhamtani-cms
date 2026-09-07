@@ -10,7 +10,7 @@ const AnnouncementPreview = () => {
     const fetchAnnouncements = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get('https://api.risingspaces.in/api/announcements', {
+        const response = await axios.get('http://localhost:5000/api/announcements', {
           params: {
             isPublished: true,
             showOnFrontend: true,

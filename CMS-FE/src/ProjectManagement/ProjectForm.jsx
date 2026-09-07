@@ -3,12 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowBack as ArrowBackIcon,
   CloudUpload as CloudUploadIcon,
-  Delete as DeleteIcon,
   Save as SaveIcon,
   HomeWork as HomeWorkIcon,
   LocationOn as LocationIcon,
   Link as LinkIcon,
-  AspectRatio as AspectRatioIcon,
 } from '@mui/icons-material';
 import { CircularProgress, Alert } from '@mui/material';
 import {
@@ -17,14 +15,18 @@ import {
   updateProject,
   getApiBaseUrl,
 } from '../api/projectApi';
+import PageShell from '../components/PageShell';
 
 const QUICK_PAGE_LINKS = [
-  { label: '/mountville', value: '/mountville' },
-  { label: '/red-stone', value: '/red-stone' },
-  { label: '/eco-town', value: '/eco-town' },
-  { label: '/18-aangan', value: '/18-aangan' },
-  { label: '/own-edge', value: '/own-edge' },
-  { label: 'External URL (https://...)', value: 'https://' },
+  { label: '/ace-ayodha', value: '/ace-ayodha' },
+  { label: '/ace-abundance', value: '/ace-abundance' },
+  { label: '/ace-villas', value: '/ace-villas' },
+  { label: '/ace-atmosphere', value: '/ace-atmosphere' },
+  { label: '/ace-aster', value: '/ace-aster' },
+  { label: '/jhamtani-bizcore', value: '/jhamtani-bizcore' },
+  { label: '/jhamtani-elevate', value: '/jhamtani-elevate' },
+  { label: '/jhamtani-spacebiz', value: '/jhamtani-spacebiz' },
+  { label: 'Live site URL', value: 'https://jhamtani.netlify.app/' },
 ];
 
 const ProjectForm = () => {
@@ -40,7 +42,7 @@ const ProjectForm = () => {
     plotSize: '',
     naStatus: '',
     pageLink: '',
-    category: 'na-plots',
+    category: 'residential',
     isActive: true,
     order: '',
     imageUrl: '',
@@ -52,48 +54,48 @@ const ProjectForm = () => {
   const [initialLoading, setInitialLoading] = useState(isEditMode);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    if (isEditMode) {
-      const fetchProject = async () => {
-        try {
-          setInitialLoading(true);
-          const res = await getProjectById(id);
-          if (res.success && res.data) {
-            const p = res.data;
-            setFormData({
-              title: p.title || '',
-              location: p.location || '',
-              status: p.status || '',
-              plotSize: p.plotSize || '',
-              naStatus: p.naStatus || '',
-              pageLink: p.pageLink || '',
-              category: p.category || 'na-plots',
-              isActive: p.isActive !== undefined ? p.isActive : true,
-              order: p.order !== undefined && p.order !== null ? p.order : '',
-              imageUrl: p.image || '',
-            });
+    if (!isEditMode) return;
 
-            const getFullUrl = (u) => {
-              if (!u) return '';
-              if (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('data:')) {
-                return u;
-              }
-              return `${baseUrl}${u.startsWith('/') ? '' : '/'}${url}`;
-            };
+    const fetchProject = async () => {
+      try {
+        setInitialLoading(true);
+        const res = await getProjectById(id);
+        if (res.success && res.data) {
+          const p = res.data;
+          setFormData({
+            title: p.title || '',
+            location: p.location || '',
+            status: p.status || '',
+            plotSize: p.plotSize || '',
+            naStatus: p.naStatus || '',
+            pageLink: p.pageLink || '',
+            category: p.category || 'residential',
+            isActive: p.isActive !== undefined ? p.isActive : true,
+            order: p.order !== undefined && p.order !== null ? p.order : '',
+            imageUrl: p.image || '',
+          });
 
-            setImagePreview(getFullUrl(p.image));
-          }
-        } catch (err) {
-          setError(err.response?.data?.message || err.message || 'Failed to load project details');
-        } finally {
-          setInitialLoading(false);
+          const getFullUrl = (u) => {
+            if (!u) return '';
+            if (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('data:')) {
+              return u;
+            }
+            return `${baseUrl}${u.startsWith('/') ? '' : '/'}${u}`;
+          };
+
+          setImagePreview(getFullUrl(p.image));
         }
-      };
-      fetchProject();
-    }
+      } catch (err) {
+        setError(err.response?.data?.message || err.message || 'Failed to load project details');
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchProject();
   }, [id, isEditMode, baseUrl]);
 
   const handleChange = (e) => {
@@ -109,9 +111,7 @@ const ProjectForm = () => {
     if (file) {
       setImageFile(file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
+      reader.onloadend = () => setImagePreview(reader.result);
       reader.readAsDataURL(file);
     }
   };
@@ -120,9 +120,7 @@ const ProjectForm = () => {
     setImageFile(null);
     setImagePreview('');
     setFormData((prev) => ({ ...prev, imageUrl: '' }));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = async (e) => {
@@ -145,7 +143,6 @@ const ProjectForm = () => {
 
     try {
       setLoading(true);
-
       const submitData = new FormData();
       submitData.append('title', formData.title.trim());
       submitData.append('location', formData.location.trim());
@@ -163,18 +160,13 @@ const ProjectForm = () => {
         submitData.append('imageUrl', formData.imageUrl);
       }
 
-      let res;
-      if (isEditMode) {
-        res = await updateProject(id, submitData);
-      } else {
-        res = await createProject(submitData);
-      }
+      const res = isEditMode
+        ? await updateProject(id, submitData)
+        : await createProject(submitData);
 
       if (res.success) {
         setSuccess(isEditMode ? 'Project updated successfully!' : 'Project created successfully!');
-        setTimeout(() => {
-          navigate('/project-management');
-        }, 1200);
+        setTimeout(() => navigate('/project-management'), 1200);
       }
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Failed to save project');
@@ -185,99 +177,86 @@ const ProjectForm = () => {
 
   if (initialLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
-        <CircularProgress color="error" />
-        <p className="mt-4 text-gray-500 text-sm font-medium">Loading project details...</p>
-      </div>
+      <PageShell>
+        <div className="cms-card p-16 flex flex-col items-center justify-center">
+          <CircularProgress sx={{ color: '#C5A880' }} />
+          <p className="mt-4 text-[#5B584C] text-sm font-medium">Loading project details...</p>
+        </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Top Navigation */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => navigate('/project-management')}
-            className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white border border-gray-200 px-4 py-2 rounded-xl shadow-xs hover:bg-gray-50 transition cursor-pointer"
-          >
-            <ArrowBackIcon className="w-4 h-4" />
-            <span>Back to Projects</span>
-          </button>
-        </div>
+    <PageShell>
+      <div className="space-y-5">
+        <button
+          onClick={() => navigate('/project-management')}
+          className="inline-flex items-center gap-2 text-sm font-medium text-[#5B584C] hover:text-[#191f26] bg-white border border-[#C5A880]/30 px-4 py-2 rounded-xl"
+        >
+          <ArrowBackIcon className="w-4 h-4" />
+          Back to Projects
+        </button>
 
-        {/* Page Title Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center text-red-600 shadow-sm">
-            <HomeWorkIcon className="text-2xl" />
+        <div className="cms-card p-4 sm:p-6 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-[#C5A880]/15 border border-[#C5A880]/30 flex items-center justify-center text-[#A0725B]">
+            <HomeWorkIcon />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-              {isEditMode ? 'Edit Ongoing Project' : 'Add New Ongoing Project'}
+            <h1 className="font-display text-2xl sm:text-3xl text-[#191f26]">
+              {isEditMode ? 'Edit Project' : 'Add New Project'}
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              Configure project card details for website's Ongoing Projects section
+            <p className="text-sm text-[#5B584C] mt-0.5">
+              Listing card for jhamtani.netlify.app
             </p>
           </div>
         </div>
 
-        {/* Alerts */}
         {error && (
-          <Alert severity="error" className="rounded-xl shadow-sm" onClose={() => setError(null)}>
+          <Alert severity="error" className="rounded-xl" onClose={() => setError(null)}>
             {error}
           </Alert>
         )}
-        {success && (
-          <Alert severity="success" className="rounded-xl shadow-sm">
-            {success}
-          </Alert>
-        )}
+        {success && <Alert severity="success" className="rounded-xl">{success}</Alert>}
 
-        {/* Main Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Card 1: Project Information */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-            <h2 className="text-base font-bold text-gray-900 mb-5 pb-3 border-b border-gray-100 flex items-center justify-between">
-              <span>Project Details</span>
-              <span className="text-xs font-normal text-gray-400">* Required fields</span>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 xl:grid-cols-5 gap-5">
+          <div className="xl:col-span-3 cms-card p-5 sm:p-7">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#5B584C] mb-5 pb-3 border-b border-[#C5A880]/20">
+              Project details
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Title */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                  Project Title <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold text-[#191f26] uppercase tracking-wider mb-2">
+                  Project Title <span className="text-[#A0725B]">*</span>
                 </label>
                 <input
                   type="text"
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  placeholder="e.g., Mountville, Red Stone, Eco Town"
+                  placeholder="e.g., ACE Ayodhya"
                   required
-                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition shadow-xs"
+                  className="cms-input"
                 />
               </div>
 
-              {/* Status Tag */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                  Status Badge Text
+                <label className="block text-xs font-bold text-[#191f26] uppercase tracking-wider mb-2">
+                  Status Badge
                 </label>
                 <input
                   type="text"
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  placeholder="e.g., Mountville, The f Row, Red Stone"
-                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition shadow-xs"
+                  placeholder="e.g., New Launch"
+                  className="cms-input"
                 />
               </div>
 
-              {/* Location */}
               <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                  Location <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold text-[#191f26] uppercase tracking-wider mb-2">
+                  Location <span className="text-[#A0725B]">*</span>
                 </label>
                 <div className="relative">
                   <LocationIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -286,79 +265,76 @@ const ProjectForm = () => {
                     name="location"
                     value={formData.location}
                     onChange={handleChange}
-                    placeholder="e.g., Kanhe Phata, Pune, Maharashtra"
+                    placeholder="e.g., Thergaon, Mundhwa, Ravet"
                     required
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition shadow-xs"
+                    className="cms-input pl-10"
                   />
                 </div>
               </div>
 
-              {/* Category */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                  Category (Tab Filter) <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold text-[#191f26] uppercase tracking-wider mb-2">
+                  Category <span className="text-[#A0725B]">*</span>
                 </label>
                 <select
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition cursor-pointer shadow-xs"
+                  className="cms-input cursor-pointer"
                 >
-                  <option value="na-plots">NA Plots</option>
                   <option value="residential">Residential</option>
+                  <option value="villas">Villas</option>
+                  <option value="studios">Studios</option>
                   <option value="commercial">Commercial</option>
+                  <option value="xo-series">XO Series</option>
                 </select>
               </div>
 
-              {/* Plot Size */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                  Plot Size / Unit Size
+                <label className="block text-xs font-bold text-[#191f26] uppercase tracking-wider mb-2">
+                  Unit / Plot Size
                 </label>
                 <input
                   type="text"
                   name="plotSize"
                   value={formData.plotSize}
                   onChange={handleChange}
-                  placeholder="e.g., 1300 sqft., 2153 sqft, 1,694 sqft"
-                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition shadow-xs"
+                  placeholder="e.g., Premium 2 & 3 BHK"
+                  className="cms-input"
                 />
               </div>
 
-              {/* NA Status */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                  NA / Property Sub-Status
+                <label className="block text-xs font-bold text-[#191f26] uppercase tracking-wider mb-2">
+                  Property Type
                 </label>
                 <input
                   type="text"
                   name="naStatus"
                   value={formData.naStatus}
                   onChange={handleChange}
-                  placeholder="e.g., Residential NA Plots, Row Houses, Villas"
-                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition shadow-xs"
+                  placeholder="e.g., Ultra-Luxury Villas"
+                  className="cms-input"
                 />
               </div>
 
-              {/* Order (Optional) */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                  Display Order Sequence <span className="text-gray-400 font-normal normal-case">(Optional)</span>
+                <label className="block text-xs font-bold text-[#191f26] uppercase tracking-wider mb-2">
+                  Display Order
                 </label>
                 <input
                   type="number"
                   name="order"
                   value={formData.order}
                   onChange={handleChange}
-                  placeholder="e.g., 1, 2, 3 (Optional - default: 0)"
-                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition shadow-xs"
+                  placeholder="1, 2, 3..."
+                  className="cms-input"
                 />
               </div>
 
-              {/* Page Link */}
               <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                  Page Link (Target URL or Internal Route)
+                <label className="block text-xs font-bold text-[#191f26] uppercase tracking-wider mb-2">
+                  Page Link
                 </label>
                 <div className="relative">
                   <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -367,20 +343,17 @@ const ProjectForm = () => {
                     name="pageLink"
                     value={formData.pageLink}
                     onChange={handleChange}
-                    placeholder="e.g., /mountville, /red-stone, or https://thefrow.in/"
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl text-gray-900 font-mono text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition shadow-xs"
+                    placeholder="/ace-ayodha"
+                    className="cms-input pl-10 font-mono"
                   />
                 </div>
-
-                {/* Quick select suggestions */}
-                <div className="flex flex-wrap items-center gap-2 mt-2.5">
-                  <span className="text-xs text-gray-400 font-medium">Quick Suggestions:</span>
+                <div className="flex flex-wrap gap-2 mt-2.5">
                   {QUICK_PAGE_LINKS.map((item) => (
                     <button
                       key={item.value}
                       type="button"
                       onClick={() => setFormData((prev) => ({ ...prev, pageLink: item.value }))}
-                      className="px-2.5 py-1 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-[#f5f3ef] border border-[#C5A880]/25 text-xs text-[#5B584C] hover:border-[#C5A880] hover:text-[#191f26]"
                     >
                       {item.label}
                     </button>
@@ -388,103 +361,87 @@ const ProjectForm = () => {
                 </div>
               </div>
 
-              {/* Active Toggle */}
-              <div className="md:col-span-2 flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <div className="md:col-span-2 flex items-center gap-3 p-4 bg-[#f5f3ef] rounded-xl border border-[#C5A880]/20">
                 <input
                   type="checkbox"
                   id="isActive"
                   name="isActive"
                   checked={formData.isActive}
                   onChange={handleChange}
-                  className="w-4 h-4 rounded text-red-600 focus:ring-red-500 bg-white border-gray-300 cursor-pointer"
+                  className="w-4 h-4 rounded accent-[#C5A880] cursor-pointer"
                 />
-                <label htmlFor="isActive" className="text-sm font-semibold text-gray-800 cursor-pointer">
-                  Card is Active (Visible in website Ongoing Projects section)
+                <label htmlFor="isActive" className="text-sm font-semibold text-[#191f26] cursor-pointer">
+                  Visible on jhamtani.netlify.app
                 </label>
               </div>
             </div>
           </div>
 
-          {/* Card 2: Image Upload */}
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-            <h2 className="text-base font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100 flex items-center justify-between">
-              <span>Project Card Photo</span>
-              <span className="text-xs text-gray-400 font-normal">Aspect ratio: 16:10 / 4:3 recommended</span>
-            </h2>
+          <div className="xl:col-span-2 space-y-5">
+            <div className="cms-card p-5 sm:p-6 xl:sticky xl:top-6">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-[#5B584C] mb-4 pb-3 border-b border-[#C5A880]/20">
+                Listing photo
+              </h2>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+              />
 
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              className="hidden"
-            />
-
-            {imagePreview ? (
-              <div className="relative aspect-[16/10] max-w-lg mx-auto bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 group shadow-md">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow transition cursor-pointer"
-                  >
-                    Change Image
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-xl shadow transition cursor-pointer"
-                  >
-                    Remove
-                  </button>
+              {imagePreview ? (
+                <div className="relative aspect-[4/5] bg-[#191f26] rounded-xl overflow-hidden group">
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/55 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition flex items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-4 py-2 bg-[#C5A880] text-[#191f26] text-xs font-semibold rounded-xl"
+                    >
+                      Change
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="px-4 py-2 bg-white/90 text-[#191f26] text-xs font-semibold rounded-xl"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-300 hover:border-red-500 rounded-2xl p-8 text-center cursor-pointer transition bg-gray-50/60 hover:bg-gray-50 group"
-              >
-                <div className="w-14 h-14 bg-red-50 group-hover:bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 text-red-500 transition">
-                  <CloudUploadIcon className="w-7 h-7" />
-                </div>
-                <h3 className="text-sm font-semibold text-gray-800 mb-1">
-                  Click or Drag & Drop to upload project image
-                </h3>
-                <p className="text-xs text-gray-400">Supports JPG, PNG, WebP, GIF (Max 25MB)</p>
-              </div>
-            )}
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-[#C5A880]/40 hover:border-[#C5A880] rounded-xl p-8 text-center bg-[#f5f3ef]"
+                >
+                  <div className="w-14 h-14 bg-[#C5A880]/20 rounded-full flex items-center justify-center mx-auto mb-3 text-[#A0725B]">
+                    <CloudUploadIcon />
+                  </div>
+                  <h3 className="text-sm font-semibold text-[#191f26] mb-1">Upload project image</h3>
+                  <p className="text-xs text-[#5B584C]">Portrait 4:5 recommended · JPG, PNG, WebP</p>
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Form Actions */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div className="xl:col-span-5 cms-sticky-actions flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3">
             <button
               type="button"
               onClick={() => navigate('/project-management')}
-              className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium rounded-xl shadow-xs transition cursor-pointer"
+              className="px-5 py-2.5 bg-white border border-[#C5A880]/30 text-[#191f26] text-sm font-medium rounded-xl"
             >
               Cancel
             </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-red-600/10 transition transform hover:-translate-y-0.5 cursor-pointer disabled:opacity-50"
-            >
-              {loading ? (
-                <CircularProgress size={18} color="inherit" />
-              ) : (
-                <SaveIcon className="w-4 h-4" />
-              )}
+            <button type="submit" disabled={loading} className="cms-btn-primary disabled:opacity-50">
+              {loading ? <CircularProgress size={18} sx={{ color: '#191f26' }} /> : <SaveIcon className="w-4 h-4" />}
               <span>{isEditMode ? 'Update Project' : 'Save Project'}</span>
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

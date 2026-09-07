@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FaPlus, FaEdit, FaTrash, FaEye, FaEyeSlash, FaUpload, FaSearch, FaSort } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSearch } from 'react-icons/fa';
+import CircularProgress from '@mui/material/CircularProgress';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import PageShell from '../PageShell';
+import { PageHero, StatCards, EmptyState } from '../PageHero';
 
 const GalleryPhotos = () => {
   const [photos, setPhotos] = useState([]);
@@ -49,7 +53,7 @@ const GalleryPhotos = () => {
       // If relative URL fails, try absolute URL
       if (!response.ok || response.headers.get('content-type')?.includes('text/html')) {
         console.log('Relative URL failed, trying absolute URL...');
-        apiUrl = `https://api.risingspaces.in/api/gallery-photos?${query}`;
+        apiUrl = `http://localhost:5000/api/gallery-photos?${query}`;
         console.log('Trying absolute URL:', apiUrl);
         response = await fetch(apiUrl);
         console.log('Absolute URL response status:', response.status);
@@ -77,7 +81,7 @@ const GalleryPhotos = () => {
   const testBackendConnection = async () => {
     try {
       console.log('Testing direct backend connection...');
-      const response = await fetch('https://api.risingspaces.in/api/gallery-photos');
+      const response = await fetch('http://localhost:5000/api/gallery-photos');
       console.log('Direct backend response status:', response.status);
       if (response.ok) {
         const data = await response.json();
@@ -91,10 +95,10 @@ const GalleryPhotos = () => {
   // Fetch categories for dropdowns
   const fetchCategories = async () => {
     try {
-      let url = 'https://api.risingspaces.in/api/gallery-photos/categories';
+      let url = 'http://localhost:5000/api/gallery-photos/categories';
       let response = await fetch(url);
       if (!response.ok) {
-        url = 'https://api.risingspaces.in/api/gallery-photos/categories';
+        url = 'http://localhost:5000/api/gallery-photos/categories';
         response = await fetch(url);
       }
       if (response.ok) {
@@ -241,7 +245,7 @@ const GalleryPhotos = () => {
       // If relative URL fails, try absolute URL
       if (!response.ok && url.startsWith('/api/')) {
         console.log('Relative URL failed, trying absolute URL...');
-        const absoluteUrl = `https://api.risingspaces.in${url}`;
+        const absoluteUrl = `http://localhost:5000${url}`;
         console.log('Trying absolute URL:', absoluteUrl);
 
         response = await fetch(absoluteUrl, {
@@ -303,7 +307,7 @@ const GalleryPhotos = () => {
       let response = await fetch(relativeUrl, { method: 'DELETE' });
 
       if (!response.ok) {
-        const absoluteUrl = `https://api.risingspaces.in/api/gallery-photos/${id}`;
+        const absoluteUrl = `http://localhost:5000/api/gallery-photos/${id}`;
         response = await fetch(absoluteUrl, { method: 'DELETE' });
       }
 
@@ -344,12 +348,23 @@ const GalleryPhotos = () => {
     );
   });
 
+  const stats = [
+    { label: 'Photos', value: photos.length, hint: 'This page' },
+    { label: 'Active', value: photos.filter((p) => p.isActive).length, hint: 'Visible' },
+    { label: 'Showing', value: filteredPhotos.length, hint: 'Current filters' },
+    { label: 'Categories', value: categories.length, hint: 'Albums' },
+  ];
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Gallery Photos Management</h1>
-        <div className="text-sm text-gray-500">Component loaded successfully</div>
+    <PageShell>
+    <div className="space-y-5 sm:space-y-6">
+      <PageHero
+        kicker="Media"
+        title="Gallery"
+        subtitle="Images for exhibitions, outings, and festivals."
+      >
         <button
+          type="button"
           onClick={() => {
             setFormData(prev => {
               const preferredCategory = selectedCategory || prev.category || (categories[0] || '');
@@ -360,31 +375,30 @@ const GalleryPhotos = () => {
             });
             setShowModal(true);
           }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          className="cms-btn-primary"
         >
-          <FaPlus /> Add New Photo
+          <FaPlus /> Add photo
         </button>
-      </div>
+      </PageHero>
 
-      {/* Search and Filters */}
-      <div className="mb-6 flex gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+      <StatCards items={stats} />
+
+      <div className="cms-card p-4 sm:p-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="relative sm:col-span-2">
+            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search photos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="cms-input pl-10"
             />
           </div>
-        </div>
-        <div className="w-64">
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="cms-input cursor-pointer"
           >
             <option value="">All categories</option>
             {categories.map((cat) => (
@@ -396,154 +410,160 @@ const GalleryPhotos = () => {
 
       {/* Photos Grid */}
       {loading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="cms-card p-16 flex flex-col items-center justify-center">
+          <CircularProgress sx={{ color: '#C5A880' }} />
+          <p className="mt-4 text-[#5B584C] text-sm">Loading photos...</p>
         </div>
+      ) : filteredPhotos.length === 0 ? (
+        <EmptyState
+          icon={PhotoLibraryIcon}
+          title="No photos yet"
+          message={searchTerm || selectedCategory ? 'Nothing matches these filters.' : 'Add the first gallery photo.'}
+          action={
+            <button
+              type="button"
+              onClick={() => {
+                setFormData((prev) => {
+                  const preferredCategory = selectedCategory || prev.category || (categories[0] || '');
+                  return {
+                    ...prev,
+                    category: normalizeCategoryValue(preferredCategory),
+                  };
+                });
+                setShowModal(true);
+              }}
+              className="cms-btn-primary"
+            >
+              <FaPlus /> Add photo
+            </button>
+          }
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="space-y-3">
           {filteredPhotos.map((photo) => (
-            <div key={photo._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="relative">
+            <article
+              key={photo._id}
+              className="cms-card p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4"
+            >
+              <div className="flex items-start gap-3 flex-1 min-w-0">
                 <img
-                  src={photo.imageUrl?.startsWith('http') ? photo.imageUrl : `https://api.risingspaces.in${photo.imageUrl}`}
+                  src={photo.imageUrl?.startsWith('http') ? photo.imageUrl : `http://localhost:5000${photo.imageUrl}`}
                   alt={photo.altText || photo.title}
-                  className="w-full h-48 object-cover"
+                  className="w-20 h-14 rounded-xl object-cover flex-shrink-0 bg-[#f5f3ef]"
                   onError={(e) => {
-                    console.log('Image failed to load:', photo.imageUrl);
                     e.target.style.display = 'none';
                   }}
                 />
-              </div>
-
-              <div className="p-4">
-                {photo.title && (
-                  <h3 className="font-semibold text-lg mb-2">{photo.title}</h3>
-                )}
-                {photo.description && (
-                  <p className="text-gray-600 text-sm mb-2">{photo.description}</p>
-                )}
-                <div className="flex items-center gap-2 mb-3">
-                  {photo.category && (
-                    <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800 capitalize">
-                      {photo.category}
-                    </span>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-[#191f26] truncate">{photo.title || 'Untitled photo'}</h3>
+                  {photo.description && (
+                    <p className="text-sm text-[#5B584C] line-clamp-2">{photo.description}</p>
                   )}
-                  <span className={`text-xs px-2 py-1 rounded ${photo.isActive
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                    }`}>
-                    {photo.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                  <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600">
-                    {new Date(photo.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(photo)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm"
-                  >
-                    <FaEdit className="inline mr-1" /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(photo._id)}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm"
-                  >
-                    <FaTrash className="inline mr-1" /> Delete
-                  </button>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {photo.category && (
+                      <span className="text-[11px] px-2.5 py-1 rounded-full bg-[#f5f3ef] text-[#5B584C] border border-[#C5A880]/25 capitalize">
+                        {photo.category}
+                      </span>
+                    )}
+                    <span
+                      className={`text-[11px] px-2.5 py-1 rounded-full ${
+                        photo.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      {photo.isActive ? 'Active' : 'Hidden'}
+                    </span>
+                    <span className="text-[11px] text-gray-500">
+                      {new Date(photo.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => handleEdit(photo)} className="cms-btn-primary !px-4">
+                  <FaEdit className="inline mr-1" /> Edit
+                </button>
+                <button type="button" onClick={() => handleDelete(photo._id)} className="cms-btn-outline !px-4">
+                  <FaTrash className="inline mr-1" /> Delete
+                </button>
+              </div>
+            </article>
           ))}
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center mt-8">
-          <div className="flex gap-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => fetchPhotos(page)}
-                className={`px-3 py-2 rounded ${currentPage === page
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
+        <div className="cms-card p-4 flex flex-wrap justify-center gap-2">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              type="button"
+              onClick={() => fetchPhotos(page)}
+              className={`px-3 py-2 rounded-xl text-sm font-medium ${
+                currentPage === page
+                  ? 'bg-[#C5A880] text-[#191f26]'
+                  : 'bg-[#f5f3ef] text-[#5B584C] hover:bg-[#C5A880]/20'
+              }`}
+            >
+              {page}
+            </button>
+          ))}
         </div>
       )}
 
-      {/* Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">
-              {editingPhoto ? 'Edit Photo' : 'Add New Photo'}
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 className="font-display text-2xl text-[#191f26] mb-4">
+              {editingPhoto ? 'Edit photo' : 'Add photo'}
             </h2>
             {selectedCategory && !editingPhoto && (
-              <div className="mb-3 text-sm">
-                <span className="text-gray-600">Uploading to category:</span>{' '}
-                <span className="font-semibold capitalize">{selectedCategory}</span>
-              </div>
+              <p className="mb-3 text-sm text-[#5B584C]">
+                Uploading to category:{' '}
+                <span className="font-semibold text-[#191f26] capitalize">{selectedCategory}</span>
+              </p>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Image
-                </label>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Image</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  className="cms-input"
                   required={!editingPhoto}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Supported formats: JPEG, PNG, GIF, WebP. Max size: 10MB
-                </p>
+                <p className="text-xs text-[#5B584C] mt-1">JPEG, PNG, GIF, WebP. Max 10MB</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title <span className="text-gray-400 text-xs">(Optional)</span>
-                </label>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Title</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg p-2"
-                  placeholder="Enter image title (optional)"
+                  className="cms-input"
+                  placeholder="Optional title"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description <span className="text-gray-400 text-xs">(Optional)</span>
-                </label>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg p-2"
-                  placeholder="Enter image description (optional)"
+                  className="cms-input"
+                  placeholder="Optional description"
                   rows="3"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                </label>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Category</label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg p-2 capitalize"
+                  className="cms-input cursor-pointer capitalize"
                   required
                   disabled={Boolean(selectedCategory) && !editingPhoto}
                 >
@@ -554,27 +574,16 @@ const GalleryPhotos = () => {
                 </select>
               </div>
 
-              <div className="flex items-center">
+              <label className="flex items-center gap-2 text-sm text-[#5B584C]">
                 <input
                   type="checkbox"
-                  id="isActive"
                   checked={formData.isActive}
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="mr-2"
                 />
-                <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
-                  Active
-                </label>
-              </div>
+                Active
+              </label>
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg disabled:opacity-50"
-                >
-                  {loading ? 'Saving...' : (editingPhoto ? 'Update' : 'Save')}
-                </button>
+              <div className="flex gap-2 pt-4 border-t border-[#C5A880]/20">
                 <button
                   type="button"
                   onClick={() => {
@@ -584,13 +593,20 @@ const GalleryPhotos = () => {
                       title: '',
                       description: '',
                       isActive: true,
-                      category: normalizeCategoryValue(selectedCategory || (categories[0] || ''))
+                      category: normalizeCategoryValue(selectedCategory || (categories[0] || '')),
                     });
                     setSelectedFile(null);
                   }}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg"
+                  className="flex-1 cms-btn-outline"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 cms-btn-primary disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : (editingPhoto ? 'Update' : 'Save')}
                 </button>
               </div>
             </form>
@@ -598,6 +614,7 @@ const GalleryPhotos = () => {
         </div>
       )}
     </div>
+    </PageShell>
   );
 };
 

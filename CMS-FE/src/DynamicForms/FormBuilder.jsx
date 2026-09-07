@@ -12,6 +12,8 @@ import AddIcon from '@mui/icons-material/Add';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import SaveIcon from '@mui/icons-material/Save';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PageShell from '../components/PageShell';
+import { PageHero } from '../components/PageHero';
 
 const FormBuilder = () => {
   const { formId } = useParams();
@@ -41,7 +43,7 @@ const FormBuilder = () => {
       setError(null);
 
       try {
-        const response = await fetch(`https://api.risingspaces.in/api/forms/forms/${formId}`);
+        const response = await fetch(`http://localhost:5000/api/forms/forms/${formId}`);
         if (!response.ok) {
           throw new Error('Failed to load form data');
         }
@@ -188,7 +190,7 @@ const FormBuilder = () => {
 
       if (formId) {
         // Update existing form
-        response = await fetch(`https://api.risingspaces.in/api/forms/forms/${formId}`, {
+        response = await fetch(`http://localhost:5000/api/forms/forms/${formId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -197,7 +199,7 @@ const FormBuilder = () => {
         });
       } else {
         // Create new form
-        response = await fetch('https://api.risingspaces.in/api/forms/forms', {
+        response = await fetch('http://localhost:5000/api/forms/forms', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -229,18 +231,18 @@ const FormBuilder = () => {
   }
 
   return (
-    <div className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <div className="cms-page">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center mb-8">
           <button
             onClick={() => navigate('/form-management')}
-            className="flex items-center mr-4 text-slate-600 hover:text-indigo-600 transition-colors"
+            className="flex items-center mr-4 text-[#5B584C] hover:text-[#A0725B] transition-colors"
           >
             <ArrowBackIcon className="mr-1" />
             <span>Back</span>
           </button>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+          <h1 className="font-display text-3xl text-[#191f26]">
             {formId ? 'Edit Form' : 'Create New Form'}
           </h1>
         </div>
@@ -272,7 +274,7 @@ const FormBuilder = () => {
                 type="button"
                 onClick={() => handleTabChange(0)}
                 className={`px-6 py-3 rounded-md font-medium transition-all ${activeTab === 0
-                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md'
+                    ? 'bg-[#C5A880] text-[#191f26] shadow-sm'
                     : 'text-slate-600 hover:bg-slate-100'
                   }`}
               >
@@ -282,7 +284,7 @@ const FormBuilder = () => {
                 type="button"
                 onClick={() => handleTabChange(1)}
                 className={`px-6 py-3 rounded-md font-medium transition-all ${activeTab === 1
-                    ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md'
+                    ? 'bg-[#C5A880] text-[#191f26] shadow-sm'
                     : 'text-slate-600 hover:bg-slate-100'
                   }`}
               >
@@ -355,7 +357,7 @@ const FormBuilder = () => {
                   <button
                     type="button"
                     onClick={addNewField}
-                    className="flex items-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg shadow-md transition-all transform hover:scale-105"
+                    className="cms-btn-primary"
                   >
                     <AddIcon className="mr-1" fontSize="small" />
                     Add Field
@@ -452,10 +454,7 @@ const FormBuilder = () => {
               <button
                 type="submit"
                 disabled={saving}
-                className={`flex items-center px-6 py-3 rounded-lg font-medium shadow-lg transition-all ${saving
-                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 transform hover:scale-105'
-                  }`}
+                className={`cms-btn-primary ${saving ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 {saving ? (
                   <>

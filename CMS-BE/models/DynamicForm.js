@@ -1,68 +1,37 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
+const { wrapModel } = require('./mongooseCompat');
 
-// Schema for form fields
-const formFieldSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  label: { type: String, required: true },
-  type: { 
-    type: String, 
-    required: true,
-    enum: ['text', 'email', 'number', 'textarea', 'select', 'checkbox', 'radio', 'date', 'file']
+const DynamicFormModel = sequelize.define(
+  'DynamicForm',
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    title: { type: DataTypes.STRING, allowNull: false },
+    description: { type: DataTypes.TEXT, allowNull: true },
+    page: { type: DataTypes.STRING, allowNull: false },
+    fields: { type: DataTypes.JSONB, defaultValue: [] },
+    emailSettings: { type: DataTypes.JSONB, defaultValue: {} },
+    isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+    createdBy: { type: DataTypes.UUID, allowNull: true },
+    updatedBy: { type: DataTypes.UUID, allowNull: true },
   },
-  placeholder: { type: String },
-  defaultValue: { type: mongoose.Schema.Types.Mixed },
-  options: [{ 
-    label: String, 
-    value: mongoose.Schema.Types.Mixed 
-  }],
-  validation: {
-    required: { type: Boolean, default: false },
-    pattern: { type: String },
-    minLength: { type: Number },
-    maxLength: { type: Number },
-    min: { type: Number },
-    max: { type: Number },
-    customMessage: { type: String }
-  },
-  conditional: {
-    dependsOn: { type: String }, // Field name this field depends on
-    showWhen: { type: mongoose.Schema.Types.Mixed }, // Value that triggers showing this field
-    hideWhen: { type: mongoose.Schema.Types.Mixed }  // Value that triggers hiding this field
-  },
-  order: { type: Number, default: 0 }, // For ordering fields
-  isActive: { type: Boolean, default: true }
-});
+  { tableName: 'dynamic_forms', timestamps: true }
+);
 
-// Main form schema
-const dynamicFormSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: { type: String },
-  page: { type: String, required: true }, // e.g., 'contact', 'feedback', 'registration'
-  fields: [formFieldSchema],
-  emailSettings: {
-    sendEmailOnSubmission: { type: Boolean, default: false }, // Enable/Disable email
-    emailTemplateId: { type: mongoose.Schema.Types.ObjectId, ref: 'EmailTemplate' }, // Reference to email template
-    recipientEmails: [{ type: String }], // List of email addresses to send responses
+const FormSubmissionModel = sequelize.define(
+  'FormSubmission',
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    formId: { type: DataTypes.UUID, allowNull: false },
+    data: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
+    submittedBy: { type: DataTypes.UUID, allowNull: true },
+    ipAddress: { type: DataTypes.STRING, allowNull: true },
+    userAgent: { type: DataTypes.TEXT, allowNull: true },
   },
-  isActive: { type: Boolean, default: true },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-}, { timestamps: true });
+  { tableName: 'form_submissions', timestamps: true }
+);
 
-// Schema for form submissions
-const formSubmissionSchema = new mongoose.Schema({
-  formId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'DynamicForm',
-    required: true
-  },
-  data: { type: mongoose.Schema.Types.Mixed, required: true }, // Submitted form data
-  submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  ipAddress: { type: String },
-  userAgent: { type: String }
-}, { timestamps: true });
-
-const DynamicForm = mongoose.model('DynamicForm', dynamicFormSchema);
-const FormSubmission = mongoose.model('FormSubmission', formSubmissionSchema);
-
-module.exports = { DynamicForm, FormSubmission };
+module.exports = {
+  DynamicForm: wrapModel(DynamicFormModel),
+  FormSubmission: wrapModel(FormSubmissionModel),
+};

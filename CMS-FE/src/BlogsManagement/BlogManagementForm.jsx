@@ -100,7 +100,7 @@ const BlogManagementForm = () => {
     });
 
     try {
-      const response = await fetch('https://api.risingspaces.in/api/blogs', {
+      const response = await fetch('http://localhost:5000/api/blogs', {
         method: 'POST',
         body: formDataToSend,
         // Don't set Content-Type header - let the browser set it with the correct boundary
@@ -127,13 +127,14 @@ const BlogManagementForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="cms-page">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
-            <h1 className="text-2xl font-bold">Create New Blog Post</h1>
-            <p className="opacity-90">Fill in the details below to publish a new blog post</p>
+          <div className="bg-[#191f26] p-6 sm:p-8 text-white">
+            <p className="text-[#C5A880] text-xs font-semibold tracking-[0.2em] uppercase">Jhamtani Perspectives</p>
+            <h1 className="font-display text-3xl mt-1">Create New Blog Post</h1>
+            <p className="text-white/70 mt-1 text-sm">Fill in the details below to publish a new blog post</p>
           </div>
 
           {/* Form */}
@@ -275,7 +276,7 @@ const BlogManagementForm = () => {
                     <button
                       type="button"
                       onClick={handleTagAdd}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
+                      className="cms-btn-primary"
                     >
                       Add
                     </button>
@@ -310,7 +311,7 @@ const BlogManagementForm = () => {
                     <button
                       type="button"
                       onClick={handleCategoryAdd}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
+                      className="cms-btn-primary"
                     >
                       Add
                     </button>
@@ -457,7 +458,7 @@ const BlogManagementForm = () => {
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition flex items-center space-x-1"
+                className="cms-btn-primary"
               >
                 <FiCheckCircle className="w-5 h-5" />
                 <span>Publish Blog</span>

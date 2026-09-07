@@ -1,0 +1,14 @@
+require('./Admin');
+require('./Announcement');
+require('./Banner');
+require('./Blog');
+require('./DynamicForm');
+require('./EmailTemplate');
+require('./Event');
+require('./GalleryPhoto');
+require('./HappyClient');
+require('./Project');
+require('./Team');
+require('./Testimonial');
+require('./VideoUpload');
+require('./YouTubeVideo');

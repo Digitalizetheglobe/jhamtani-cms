@@ -1,13 +1,18 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
+const { wrapModel } = require('./mongooseCompat');
 
-const eventSchema = new mongoose.Schema({
-  month: { type: String, required: true },
-  date: { type: String, required: true },
-  country: { type: String, required: true },
-  eventExpo: { type: String, required: true },
-  venue: { type: String, required: true }
-}, {
-  timestamps: true // Adds createdAt and updatedAt
-});
+const EventModel = sequelize.define(
+  'Event',
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    month: { type: DataTypes.STRING, allowNull: false },
+    date: { type: DataTypes.STRING, allowNull: false },
+    country: { type: DataTypes.STRING, allowNull: false },
+    eventExpo: { type: DataTypes.STRING, allowNull: false },
+    venue: { type: DataTypes.STRING, allowNull: false },
+  },
+  { tableName: 'events', timestamps: true }
+);
 
-module.exports = mongoose.model('Event', eventSchema);
+module.exports = wrapModel(EventModel);

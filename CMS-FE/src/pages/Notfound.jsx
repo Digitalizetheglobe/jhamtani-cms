@@ -1,26 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
+import { Link } from "react-router-dom";
 
 function Notfound() {
-  const [timeOut, setTimeOut] = useState(5);
-
-  //   TODO: Redirect after specific timeout
-
-  //   useEffect(() => {
-  //     setTimeout(() => {
-  //       setTimeOut((prev) => prev - 1);
-  //     }, 1000);
-  //   }, []);
-
-  //   setTimeout(() => {
-  //     window.location.href = "/";
-  //   }, 25000);
-
   return (
-    <div className="text-center">
-      <h1 className="text-3xl text-center mt-20 font-bold">
-        Requested resource not found
-      </h1>
-      <p>You'll be redirected in {timeOut}</p>
+    <div className="cms-page min-h-[70vh] flex items-center justify-center">
+      <div className="text-center max-w-md">
+        <p className="text-[#C5A880] text-sm font-semibold tracking-[0.2em] uppercase">404</p>
+        <h1 className="font-display text-4xl text-[#191f26] mt-2">Page not found</h1>
+        <p className="text-[#5B584C] mt-3">The page you requested is not available in Jhamtani CMS.</p>
+        <Link to="/" className="cms-btn-primary mt-6 inline-flex">
+          Back to dashboard
+        </Link>
+      </div>
     </div>
   );
 }

@@ -16,9 +16,9 @@ const BannerApiGuide = ({ bannerData, onClose }) => {
       data: {
         _id: bannerId,
         title: bannerData?.title || 'Ongoing Projects Banner',
-        desktopBanner: bannerData?.desktopBanner ? `${baseUrl}${bannerData.desktopBanner}` : 'https://api.risingspaces.in/uploads/banners/desktop.webp',
-        tabletBanner: bannerData?.tabletBanner ? `${baseUrl}${bannerData.tabletBanner}` : 'https://api.risingspaces.in/uploads/banners/tablet.webp',
-        mobileBanner: bannerData?.mobileBanner ? `${baseUrl}${bannerData.mobileBanner}` : 'https://api.risingspaces.in/uploads/banners/mobile.webp',
+        desktopBanner: bannerData?.desktopBanner ? `${baseUrl}${bannerData.desktopBanner}` : 'http://localhost:5000/uploads/banners/desktop.webp',
+        tabletBanner: bannerData?.tabletBanner ? `${baseUrl}${bannerData.tabletBanner}` : 'http://localhost:5000/uploads/banners/tablet.webp',
+        mobileBanner: bannerData?.mobileBanner ? `${baseUrl}${bannerData.mobileBanner}` : 'http://localhost:5000/uploads/banners/mobile.webp',
         isActive: true
       }
     },
@@ -37,7 +37,7 @@ export default function LandingBanner({ bannerId = '${bannerId}', className = ''
   useEffect(() => {
     async function fetchBanner() {
       try {
-        const res = await fetch(\`https://api.risingspaces.in/api/banners/\${bannerId}\`);
+        const res = await fetch(\`http://localhost:5000/api/banners/\${bannerId}\`);
         const json = await res.json();
         if (json.success && json.data) {
           setBanner(json.data);
@@ -57,7 +57,7 @@ export default function LandingBanner({ bannerId = '${bannerId}', className = ''
 
   if (!banner || !banner.isActive) return null;
 
-  const baseUrl = 'https://api.risingspaces.in';
+  const baseUrl = 'http://localhost:5000';
   const desktopSrc = banner.desktopBanner?.startsWith('http') 
     ? banner.desktopBanner 
     : \`\${baseUrl}\${banner.desktopBanner}\`;

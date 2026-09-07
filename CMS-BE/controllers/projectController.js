@@ -167,7 +167,7 @@ const createProject = async (req, res) => {
       plotSize: plotSize ? plotSize.trim() : '',
       naStatus: naStatus ? naStatus.trim() : '',
       pageLink: pageLink ? pageLink.trim() : '',
-      category: category ? category.trim().toLowerCase() : 'na-plots',
+      category: category ? category.trim().toLowerCase() : 'residential',
       isActive: isActive === undefined ? true : isActive === 'true' || isActive === true,
       order: order !== undefined && order !== '' ? Number(order) : 0,
     });

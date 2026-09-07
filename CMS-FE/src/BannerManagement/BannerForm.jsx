@@ -187,7 +187,7 @@ const BannerForm = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="cms-page">
       {/* Header */}
       <div className="max-w-5xl mx-auto mb-8">
         <button
@@ -212,7 +212,7 @@ const BannerForm = () => {
             <button
               type="button"
               onClick={() => navigate('/banner-management')}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition text-sm font-medium"
+              className="cms-btn-outline"
             >
               Cancel
             </button>
@@ -220,7 +220,7 @@ const BannerForm = () => {
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold shadow-md flex items-center gap-2 text-sm transition disabled:opacity-50 cursor-pointer"
+              className="cms-btn-primary disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
                 <CircularProgress size={18} color="inherit" />
@@ -503,7 +503,7 @@ const BannerForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className="px-8 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-lg flex items-center gap-2 text-sm transition disabled:opacity-50 cursor-pointer"
+            className="cms-btn-primary disabled:opacity-50 cursor-pointer"
           >
             {loading ? (
               <CircularProgress size={18} color="inherit" />

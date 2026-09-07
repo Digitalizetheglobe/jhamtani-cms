@@ -45,7 +45,7 @@ const BlogManagementDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="cms-page">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -53,14 +53,14 @@ const BlogManagementDashboard = () => {
           <div className="flex space-x-4">
             <button
               onClick={() => setActiveTab('upload')}
-              className={`px-6 py-2 rounded-lg font-medium flex items-center space-x-2 transition ${activeTab === 'upload' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              className={`px-6 py-2 rounded-full font-medium flex items-center space-x-2 transition ${activeTab === 'upload' ? 'bg-[#C5A880] text-[#191f26]' : 'bg-white text-[#191f26] border border-[#C5A880]/40 hover:border-[#C5A880]'}`}
             >
               <FiUpload className="w-5 h-5" />
               <span>Upload Blogs</span>
             </button>
             <button
               onClick={() => setActiveTab('view')}
-              className={`px-6 py-2 rounded-lg font-medium flex items-center space-x-2 transition ${activeTab === 'view' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+              className={`px-6 py-2 rounded-full font-medium flex items-center space-x-2 transition ${activeTab === 'view' ? 'bg-[#C5A880] text-[#191f26]' : 'bg-white text-[#191f26] border border-[#C5A880]/40 hover:border-[#C5A880]'}`}
             >
               <FiEye className="w-5 h-5" />
               <span>View Uploaded Blogs</span>
@@ -114,7 +114,7 @@ const BlogManagementDashboard = () => {
                         <FiUpload className="w-12 h-12 text-gray-400 mb-2" />
                         <p className="text-sm text-gray-500 mb-2">Drag & drop your image here</p>
                         <p className="text-xs text-gray-400 mb-4">or</p>
-                        <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+                        <button className="cms-btn-primary">
                           Browse Files
                         </button>
                       </div>
@@ -162,7 +162,7 @@ const BlogManagementDashboard = () => {
                 <button className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
                   Save as Draft
                 </button>
-                <button className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition flex items-center space-x-1">
+                <button className="cms-btn-primary">
                   <FiUpload className="w-5 h-5" />
                   <span>Publish Blog</span>
                 </button>
@@ -209,7 +209,7 @@ const BlogManagementDashboard = () => {
                         <span>{blog.views} views</span>
                       </div>
                       <div className="flex space-x-2">
-                        <button className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center space-x-1 transition">
+                        <button className="flex-1 py-2 cms-btn-primary">
                           <FiEdit2 className="w-4 h-4" />
                           <span>Edit</span>
                         </button>

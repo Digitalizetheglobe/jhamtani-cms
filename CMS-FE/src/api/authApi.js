@@ -1,16 +1,5 @@
 import axios from 'axios';
-
-// Get API base URL from environment or use default
-const getApiBaseUrl = () => {
-  const envUrl = import.meta.env?.VITE_API_BASE_URL;
-  if (envUrl && envUrl.trim().length > 0) {
-    return envUrl.replace(/\/$/, '');
-  }
-  // Try relative URL first, fallback to localhost for development
-  return 'https://api.risingspaces.in';
-};
-
-const API_BASE_URL = getApiBaseUrl();
+import { API_BASE_URL } from './config';
 
 // Create axios instance with default config
 const api = axios.create({

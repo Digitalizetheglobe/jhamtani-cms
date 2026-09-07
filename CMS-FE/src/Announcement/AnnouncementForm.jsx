@@ -79,13 +79,13 @@ const AnnouncementForm = ({ announcement, onSuccess, onCancel }) => {
 
       let response;
       if (announcement) {
-        response = await axios.put(`https://api.risingspaces.in/api/announcements/${announcement._id}`, formDataToSend, {
+        response = await axios.put(`http://localhost:5000/api/announcements/${announcement._id}`, formDataToSend, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         });
       } else {
-        response = await axios.post('https://api.risingspaces.in/api/announcements', formDataToSend, {
+        response = await axios.post('http://localhost:5000/api/announcements', formDataToSend, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -233,7 +233,7 @@ const AnnouncementForm = ({ announcement, onSuccess, onCancel }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="cms-btn-primary disabled:opacity-50"
           >
             {isLoading ? (
               <>

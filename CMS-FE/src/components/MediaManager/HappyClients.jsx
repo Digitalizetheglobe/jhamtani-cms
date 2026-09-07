@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaUser } from 'react-icons/fa';
+import CircularProgress from '@mui/material/CircularProgress';
+import PageShell from '../PageShell';
+import { PageHero, StatCards, EmptyState } from '../PageHero';
 
 const HappyClients = () => {
   const [clients, setClients] = useState([]);
@@ -21,7 +24,7 @@ const HappyClients = () => {
     if (envUrl && envUrl.trim().length > 0) {
       return envUrl.replace(/\/$/, '');
     }
-    return 'https://api.risingspaces.in';
+    return 'http://localhost:5000';
   }, []);
 
   const resolvePhotoUrl = (photoUrl) => {
@@ -48,7 +51,7 @@ const HappyClients = () => {
       // If relative URL fails, try absolute URL
       if (!response.ok || response.headers.get('content-type')?.includes('text/html')) {
         console.log('Relative URL failed, trying absolute URL...');
-        apiUrl = `https://api.risingspaces.in/api/happy-clients?page=${page}&limit=100&isActive=true&sort=order`;
+        apiUrl = `http://localhost:5000/api/happy-clients?page=${page}&limit=100&isActive=true&sort=order`;
         console.log('Trying absolute URL:', apiUrl);
         response = await fetch(apiUrl);
         console.log('Absolute URL response status:', response.status);
@@ -101,7 +104,7 @@ const HappyClients = () => {
 
     if (!response.ok && url.startsWith('/api/')) {
       console.log('Relative URL failed, trying absolute URL...');
-      const absoluteUrl = `https://api.risingspaces.in${url}`;
+      const absoluteUrl = `http://localhost:5000${url}`;
       console.log('Trying absolute URL:', absoluteUrl);
 
       response = await fetch(absoluteUrl, {
@@ -226,7 +229,7 @@ const HappyClients = () => {
 
         // If relative URL fails, try absolute URL
         if (!response.ok && response.status !== 404) {
-          response = await fetch(`https://api.risingspaces.in/api/happy-clients/${id}`, {
+          response = await fetch(`http://localhost:5000/api/happy-clients/${id}`, {
             method: 'DELETE'
           });
         }
@@ -280,331 +283,211 @@ const HappyClients = () => {
     );
   });
 
+  const stats = [
+    { label: 'Faces', value: clients.length, hint: 'This page' },
+    { label: 'Showing', value: filteredClients.length, hint: 'Current search' },
+    { label: 'With photo', value: clients.filter((c) => c.photoUrl).length, hint: 'Portraits' },
+    { label: 'Pages', value: totalPages, hint: 'Pagination' },
+  ];
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Happy Clients Management</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              console.log('Manual refresh triggered');
-              fetchClients(currentPage);
-            }}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-          >
-            🔄 Refresh
-          </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-          >
-            <FaPlus /> Add New Client
-          </button>
+    <PageShell>
+    <div className="space-y-5 sm:space-y-6">
+      <PageHero
+        kicker="Media"
+        title="Happy Faces"
+        subtitle="Client portraits for the public site."
+      >
+        <button type="button" onClick={() => fetchClients(currentPage)} className="cms-btn-outline">
+          Refresh
+        </button>
+        <button type="button" onClick={() => setShowModal(true)} className="cms-btn-primary">
+          <FaPlus /> Add client
+        </button>
+      </PageHero>
+
+      <StatCards items={stats} />
+
+      <div className="cms-card p-4 sm:p-5">
+        <div className="relative">
+          <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search clients..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="cms-input pl-10"
+          />
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="mb-6 flex gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search clients..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Clients Grid */}
       {loading ? (
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="cms-card p-16 flex flex-col items-center justify-center">
+          <CircularProgress sx={{ color: '#C5A880' }} />
+          <p className="mt-4 text-[#5B584C] text-sm">Loading clients...</p>
         </div>
+      ) : filteredClients.length === 0 ? (
+        <EmptyState
+          icon={FaUser}
+          title="No happy faces yet"
+          message={searchTerm ? 'Nothing matches this search.' : 'Add the first client portrait.'}
+          action={
+            <button type="button" onClick={() => setShowModal(true)} className="cms-btn-primary">
+              <FaPlus /> Add client
+            </button>
+          }
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="space-y-3">
           {filteredClients.map((client) => (
-            <div key={client._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="relative">
-                {client.photoUrl ? (
-                  <img
-                    src={resolvePhotoUrl(client.photoUrl)}
-                    alt={client.title || client.name || 'Client Photo'}
-                    className="w-full h-48 object-cover"
-                    onLoad={() => {
-                      console.log('Image loaded successfully:', client.photoUrl);
-                    }}
-                    onError={(e) => {
-                      console.log('Image failed to load:', client.photoUrl);
-                      console.log('Client data:', client);
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : (() => {
-                  console.log('No photoUrl for client:', client);
-                  return null;
-                })()}
-                <div className={`w-full h-48 bg-gray-200 flex items-center justify-center ${client.photoUrl ? 'hidden' : ''}`}>
-                  <FaUser className="text-4xl text-gray-400" />
-                </div>
-              </div>
-
-              <div className="p-4">
-                {/* Basic Info */}
-                <div className="mb-3">
-                  <h3 className="font-semibold text-lg mb-1">{client.name || client.title || 'Image Upload'}</h3>
-                  {client.company && (
-                    <p className="text-blue-600 font-medium text-sm">{client.company}</p>
-                  )}
-                  {client.position && (
-                    <p className="text-gray-600 text-sm">{client.position}</p>
+            <article
+              key={client._id}
+              className="cms-card p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4"
+            >
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-[#C5A880]/20 flex-shrink-0 flex items-center justify-center">
+                  {client.photoUrl ? (
+                    <img
+                      src={resolvePhotoUrl(client.photoUrl)}
+                      alt={client.title || client.name || 'Client'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <FaUser className="text-[#A0725B]" />
                   )}
                 </div>
-
-                {/* Testimonial */}
-                {client.testimonial && (
-                  <p className="text-gray-600 text-sm mb-3 italic">"{client.testimonial}"</p>
-                )}
-
-                {/* Description */}
-                {client.description && (
-                  <p className="text-gray-600 text-sm mb-3">{client.description}</p>
-                )}
-
-                {/* Rating */}
-                {client.rating && (
-                  <div className="flex items-center gap-1 mb-2">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <span key={i} className={`text-sm ${i < client.rating ? 'text-yellow-400' : 'text-gray-300'}`}>
-                        ★
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-[#191f26] truncate">
+                    {client.name || client.title || 'Image upload'}
+                  </h3>
+                  <p className="text-sm text-[#5B584C] truncate">
+                    {[client.position, client.company].filter(Boolean).join(' · ')
+                      || client.description
+                      || 'No details'}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {client.category && (
+                      <span className="text-[11px] px-2.5 py-1 rounded-full bg-[#f5f3ef] text-[#5B584C] border border-[#C5A880]/25">
+                        {client.category}
                       </span>
-                    ))}
-                    <span className="text-xs text-gray-500 ml-1">({client.rating}/5)</span>
-                  </div>
-                )}
-
-                {/* Contact Info */}
-                <div className="space-y-1 mb-3">
-                  {client.website && (
-                    <div className="text-xs text-blue-500">
-                      🌐 <a href={client.website} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                        {client.website}
-                      </a>
-                    </div>
-                  )}
-                  {client.email && (
-                    <div className="text-xs text-gray-600">
-                      📧 {client.email}
-                    </div>
-                  )}
-                  {client.phone && (
-                    <div className="text-xs text-gray-600">
-                      📞 {client.phone}
-                    </div>
-                  )}
-                </div>
-
-                {/* Status Badges */}
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {client.category && (
-                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                      {client.category}
-                    </span>
-                  )}
-                  {client.isActive !== undefined && (
-                    <span className={`text-xs px-2 py-1 rounded ${client.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                      }`}>
-                      {client.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  )}
-                  {client.featured && (
-                    <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
-                      Featured
-                    </span>
-                  )}
-                  {client.order !== undefined && (
-                    <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
-                      Order: {client.order}
-                    </span>
-                  )}
-                </div>
-
-                {/* Tags */}
-                {client.tags && client.tags.length > 0 && (
-                  <div className="mb-3">
-                    <div className="flex flex-wrap gap-1">
-                      {client.tags.map((tag, index) => (
-                        <span key={index} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Social Links */}
-                {client.socialLinks && (
-                  <div className="flex gap-2 mb-3">
-                    {client.socialLinks.linkedin && (
-                      <a href={client.socialLinks.linkedin} target="_blank" rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm">
-                        LinkedIn
-                      </a>
                     )}
-                    {client.socialLinks.twitter && (
-                      <a href={client.socialLinks.twitter} target="_blank" rel="noopener noreferrer"
-                        className="text-blue-400 hover:text-blue-600 text-sm">
-                        Twitter
-                      </a>
-                    )}
-                    {client.socialLinks.facebook && (
-                      <a href={client.socialLinks.facebook} target="_blank" rel="noopener noreferrer"
-                        className="text-blue-700 hover:text-blue-900 text-sm">
-                        Facebook
-                      </a>
+                    {client.isActive !== undefined && (
+                      <span
+                        className={`text-[11px] px-2.5 py-1 rounded-full ${
+                          client.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        {client.isActive ? 'Active' : 'Hidden'}
+                      </span>
                     )}
                   </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(client)}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm"
-                  >
-                    <FaEdit className="inline mr-1" /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(client._id)}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm"
-                  >
-                    <FaTrash className="inline mr-1" /> Delete
-                  </button>
                 </div>
-
-                {/* Debug: Show all data */}
-                <details className="mt-3">
-                  <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
-                    Show all data (debug)
-                  </summary>
-                  <pre className="text-xs text-gray-600 mt-2 p-2 bg-gray-100 rounded overflow-auto max-h-32">
-                    {JSON.stringify(client, null, 2)}
-                  </pre>
-                </details>
               </div>
-            </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => handleEdit(client)} className="cms-btn-primary !px-4">
+                  <FaEdit className="inline mr-1" /> Edit
+                </button>
+                <button type="button" onClick={() => handleDelete(client._id)} className="cms-btn-outline !px-4">
+                  <FaTrash className="inline mr-1" /> Delete
+                </button>
+              </div>
+            </article>
           ))}
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center mt-8">
-          <div className="flex gap-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => fetchClients(page)}
-                className={`px-3 py-2 rounded ${currentPage === page
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
+        <div className="cms-card p-4 flex flex-wrap justify-center gap-2">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              type="button"
+              onClick={() => fetchClients(page)}
+              className={`px-3 py-2 rounded-xl text-sm font-medium ${
+                currentPage === page
+                  ? 'bg-[#C5A880] text-[#191f26]'
+                  : 'bg-[#f5f3ef] text-[#5B584C] hover:bg-[#C5A880]/20'
+              }`}
+            >
+              {page}
+            </button>
+          ))}
         </div>
       )}
 
-      {/* Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-4">
-              {editingClient ? 'Edit Client' : 'Add New Client'}
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 className="font-display text-2xl text-[#191f26] mb-4">
+              {editingClient ? 'Edit client' : 'Add client'}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Photo
-                </label>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Photo</label>
                 <div className="flex gap-2 items-end">
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
-                    className="flex-1 border border-gray-300 rounded-lg p-2"
+                    className="flex-1 cms-input"
                   />
                   <button
                     type="button"
                     onClick={handleImageOnlySubmit}
                     disabled={!selectedFile || loading}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg disabled:opacity-50 whitespace-nowrap"
+                    className="cms-btn-outline disabled:opacity-50 whitespace-nowrap"
                   >
-                    Upload Image Only
+                    Image only
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Supported formats: JPEG, PNG, GIF, WebP. Max size: 5MB. Use "Upload Image Only" to add just the image without title/description.
-                </p>
+                <p className="text-xs text-[#5B584C] mt-1">JPEG, PNG, GIF, WebP. Max 5MB</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title
-                </label>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Title</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  className="cms-input"
                   placeholder="Enter client title"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg p-2"
+                  className="cms-input"
                   placeholder="Enter client description"
                   rows="3"
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg disabled:opacity-50"
-                >
-                  {loading ? 'Saving...' : (editingClient ? 'Update' : 'Save')}
-                </button>
+              <div className="flex gap-2 pt-4 border-t border-[#C5A880]/20">
                 <button
                   type="button"
                   onClick={() => {
                     setShowModal(false);
                     setEditingClient(null);
-                    setFormData({
-                      title: '',
-                      description: ''
-                    });
+                    setFormData({ title: '', description: '' });
                     setSelectedFile(null);
                   }}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg"
+                  className="flex-1 cms-btn-outline"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 cms-btn-primary disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : (editingClient ? 'Update' : 'Save')}
                 </button>
               </div>
             </form>
@@ -612,6 +495,7 @@ const HappyClients = () => {
         </div>
       )}
     </div>
+    </PageShell>
   );
 };
 

@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
-  Box, Typography, Button, Card, CardContent, Grid,
-  IconButton, Chip, Dialog, DialogActions, DialogContent,
-  DialogContentText, DialogTitle, CircularProgress, Alert,
-  Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, TextField, Select, MenuItem, FormControl,
-  InputLabel
+  Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
+  CircularProgress, Alert,
 } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import InboxIcon from '@mui/icons-material/Inbox';
+import PageShell from '../components/PageShell';
+import { PageHero, StatCards, EmptyState } from '../components/PageHero';
 
 const LeadsManagement = () => {
   const [leads, setLeads] = useState([]);
@@ -20,7 +19,6 @@ const LeadsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterField, setFilterField] = useState('all');
   const [filterForm, setFilterForm] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [startDate, setStartDate] = useState('');
@@ -30,13 +28,12 @@ const LeadsManagement = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState(null);
 
-  // Fetch leads from API
   const fetchLeads = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('https://api.risingspaces.in/api/forms/forms');
+      const response = await fetch('http://localhost:5000/api/forms/forms');
       if (!response.ok) {
         throw new Error('Failed to load forms');
       }
@@ -44,28 +41,24 @@ const LeadsManagement = () => {
       const result = await response.json();
 
       if (result.success && result.data) {
-        // Store all forms data separately
         setForms(result.data);
 
-        // Extract all submissions from all forms
         const allSubmissions = [];
-        result.data.forEach(form => {
+        result.data.forEach((form) => {
           if (form.submissions && Array.isArray(form.submissions)) {
-            // Add form information to each submission
-            const submissionsWithFormInfo = form.submissions.map(submission => ({
+            const submissionsWithFormInfo = form.submissions.map((submission) => ({
               ...submission,
               formId: form._id,
               formTitle: form.title || 'Untitled Form',
               formPage: form.page || 'Unknown Page',
               formDescription: form.description || '',
               formIsActive: form.isActive,
-              formFields: form.fields || []
+              formFields: form.fields || [],
             }));
             allSubmissions.push(...submissionsWithFormInfo);
           }
         });
 
-        // Sort submissions so newest leads appear on top
         allSubmissions.sort((a, b) => {
           const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
           const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -88,43 +81,50 @@ const LeadsManagement = () => {
     fetchLeads();
   }, []);
 
-  // Get all unique field names from leads for filtering
   const getAllFieldNames = () => {
     const fieldNames = new Set();
-    leads.forEach(lead => {
+    leads.forEach((lead) => {
       if (lead.data) {
-        Object.keys(lead.data).forEach(key => fieldNames.add(key));
+        Object.keys(lead.data).forEach((key) => fieldNames.add(key));
       }
     });
     return Array.from(fieldNames);
   };
 
-  // Get all unique form titles for filtering (from all forms, not just leads)
   const getAllFormTitles = () => {
-    return forms.map(form => form.title || 'Untitled Form');
+    return forms.map((form) => form.title || 'Untitled Form');
   };
 
-  // Filter leads based on search and filter
-  const filteredLeads = leads.filter(lead => {
+  const getLeadPreview = (lead) => {
+    const data = lead.data || {};
+    const entries = Object.entries(data);
+    const pick = (re) => {
+      const hit = entries.find(([k]) => re.test(k));
+      return hit ? String(hit[1]) : '';
+    };
+    return {
+      name: pick(/name/i) || 'Website enquiry',
+      email: pick(/email/i),
+      phone: pick(/phone|mobile|whatsapp|tel/i),
+    };
+  };
+
+  const filteredLeads = leads.filter((lead) => {
     if (!lead.data) return false;
 
-    const searchMatch = Object.values(lead.data).some(value =>
-      String(value).toLowerCase().includes(searchTerm.toLowerCase())
-    ) ||
+    const searchMatch =
+      Object.values(lead.data).some((value) =>
+        String(value).toLowerCase().includes(searchTerm.toLowerCase())
+      ) ||
       (lead.formTitle && lead.formTitle.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (lead.formPage && lead.formPage.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const filterMatch = filterField === 'all' ||
-      (lead.data[filterField] !== undefined);
-
-    const formMatch = filterForm === 'all' ||
-      (lead.formTitle === filterForm);
-
-    const statusMatch = filterStatus === 'all' ||
+    const formMatch = filterForm === 'all' || lead.formTitle === filterForm;
+    const statusMatch =
+      filterStatus === 'all' ||
       (filterStatus === 'active' && lead.formIsActive) ||
       (filterStatus === 'inactive' && !lead.formIsActive);
 
-    // Date range filter (uses submission createdAt)
     const createdAt = lead.createdAt ? new Date(lead.createdAt) : null;
     let dateMatch = true;
 
@@ -135,45 +135,38 @@ const LeadsManagement = () => {
 
     if (endDate) {
       const end = new Date(endDate);
-      // Add 1 day to include the entire end date
       end.setDate(end.getDate() + 1);
       dateMatch = dateMatch && createdAt && createdAt < end;
     }
 
-    return searchMatch && filterMatch && formMatch && statusMatch && dateMatch;
+    return searchMatch && formMatch && statusMatch && dateMatch;
   });
 
-  // Quickly filter by a single specific date (YYYY-MM-DD)
   const handleFilterByDate = (dateString) => {
     setStartDate(dateString);
     setEndDate(dateString);
   };
 
-  // Open lead detail dialog
   const openLeadDetail = (lead) => {
     setSelectedLead(lead);
     setDetailDialogOpen(true);
   };
 
-  // Close lead detail dialog
   const closeLeadDetail = () => {
     setDetailDialogOpen(false);
     setSelectedLead(null);
   };
 
-  // Open delete dialog
   const openDeleteDialog = (lead) => {
     setLeadToDelete(lead);
     setDeleteDialogOpen(true);
   };
 
-  // Close delete dialog
   const closeDeleteDialog = () => {
     setDeleteDialogOpen(false);
     setLeadToDelete(null);
   };
 
-  // Confirm delete
   const confirmDelete = async () => {
     if (!leadToDelete || !leadToDelete._id) {
       setError('Invalid lead selected for deletion');
@@ -183,12 +176,12 @@ const LeadsManagement = () => {
 
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`https://api.risingspaces.in/api/forms/submissions/${leadToDelete._id}`, {
+      const response = await fetch(`http://localhost:5000/api/forms/submissions/${leadToDelete._id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
@@ -196,8 +189,7 @@ const LeadsManagement = () => {
         throw new Error(errorData.message || 'Failed to delete lead');
       }
 
-      // Remove from list
-      setLeads(leads.filter(l => l._id !== leadToDelete._id));
+      setLeads(leads.filter((l) => l._id !== leadToDelete._id));
       closeDeleteDialog();
     } catch (err) {
       setError(err.message || 'Failed to delete lead. Please try again.');
@@ -205,7 +197,6 @@ const LeadsManagement = () => {
     }
   };
 
-  // Export leads to CSV
   const exportToCSV = () => {
     if (filteredLeads.length === 0) return;
 
@@ -218,12 +209,12 @@ const LeadsManagement = () => {
       'Form ID',
       'Submission Date',
       'IP Address',
-      ...fieldNames.map(field => field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))
+      ...fieldNames.map((field) => field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())),
     ];
 
     const csvContent = [
       csvHeaders.join(','),
-      ...filteredLeads.map(lead => {
+      ...filteredLeads.map((lead) => {
         const row = [
           `"${(lead.formTitle || 'Untitled Form').replace(/"/g, '""')}"`,
           `"${(lead.formPage || 'Unknown').replace(/"/g, '""')}"`,
@@ -232,13 +223,13 @@ const LeadsManagement = () => {
           `"${(lead.formId || 'N/A').replace(/"/g, '""')}"`,
           `"${new Date(lead.createdAt).toLocaleString().replace(/"/g, '""')}"`,
           `"${(lead.ipAddress || 'N/A').replace(/"/g, '""')}"`,
-          ...fieldNames.map(field => {
+          ...fieldNames.map((field) => {
             const value = lead.data[field] || '';
             return `"${String(value).replace(/"/g, '""')}"`;
-          })
+          }),
         ];
         return row.join(',');
-      })
+      }),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -250,539 +241,276 @@ const LeadsManagement = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const stats = [
+    { label: 'Submissions', value: leads.length, hint: 'All enquiries' },
+    { label: 'Showing', value: filteredLeads.length, hint: 'Current filters' },
+    { label: 'Active forms', value: forms.filter((form) => form.isActive).length, hint: 'Live on site' },
+    { label: 'Total forms', value: forms.length, hint: 'Form builder' },
+  ];
+
   if (loading && leads.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <CircularProgress />
-      </div>
+      <PageShell>
+        <div className="cms-card p-16 flex flex-col items-center justify-center">
+          <CircularProgress sx={{ color: '#C5A880' }} />
+          <p className="mt-4 text-[#5B584C] text-sm">Loading enquiries...</p>
+        </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Leads Management</h1>
-          <p className="text-gray-600 mt-2">
-            View and manage form submissions and leads
-          </p>
-        </div>
-        <div className="flex space-x-3 mt-4 md:mt-0">
-          <Button
-            variant="outlined"
-            className="border-blue-600 text-blue-600 hover:bg-blue-50"
-            startIcon={<RefreshIcon />}
-            onClick={fetchLeads}
-          >
+    <PageShell>
+      <div className="space-y-5 sm:space-y-6">
+        <PageHero
+          kicker="Quick Enquiry"
+          title="Website leads"
+          subtitle="Submissions from contact and enquiry forms on jhamtani.netlify.app"
+        >
+          <button type="button" onClick={fetchLeads} className="cms-btn-outline">
+            <RefreshIcon className="w-4 h-4" />
             Refresh
-          </Button>
-          <Button
-            variant="contained"
-            className="bg-green-600 hover:bg-green-700 text-white"
-            startIcon={<DownloadIcon />}
+          </button>
+          <button
+            type="button"
             onClick={exportToCSV}
             disabled={filteredLeads.length === 0}
+            className="cms-btn-primary"
           >
+            <DownloadIcon className="w-4 h-4" />
             Export CSV
-          </Button>
-        </div>
-      </div>
+          </button>
+        </PageHero>
 
-      {/* Search and Filter Section */}
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-        <div className="flex flex-col gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <TextField
-                fullWidth
-                placeholder="Search leads..."
+        <StatCards items={stats} />
+
+        <div className="cms-card p-4 sm:p-5">
+          <form
+            onSubmit={(e) => e.preventDefault()}
+            className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3"
+          >
+            <div className="relative sm:col-span-2 xl:col-span-2">
+              <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search name, email, phone, form..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: <SearchIcon className="text-gray-400 mr-2" />
-                }}
-                className="rounded-lg"
+                className="cms-input pl-10"
               />
             </div>
-          </div>
-          <div className="flex flex-col md:flex-row md:items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <FilterListIcon className="text-gray-600" />
-              <FormControl className="min-w-[200px]">
-                <InputLabel>Filter by Field</InputLabel>
-                <Select
-                  value={filterField}
-                  onChange={(e) => setFilterField(e.target.value)}
-                  label="Filter by Field"
-                >
-                  <MenuItem value="all">All Fields</MenuItem>
-                  {getAllFieldNames().map(field => (
-                    <MenuItem key={field} value={field}>
-                      {field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl className="min-w-[200px]">
-                <InputLabel>Filter by Form</InputLabel>
-                <Select
-                  value={filterForm}
-                  onChange={(e) => setFilterForm(e.target.value)}
-                  label="Filter by Form"
-                >
-                  <MenuItem value="all">All Forms</MenuItem>
-                  {getAllFormTitles().map(formTitle => (
-                    <MenuItem key={formTitle} value={formTitle}>
-                      {formTitle}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl className="min-w-[150px]">
-                <InputLabel>Form Status</InputLabel>
-                <Select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  label="Form Status"
-                >
-                  <MenuItem value="all">All Status</MenuItem>
-                  <MenuItem value="active">Active</MenuItem>
-                  <MenuItem value="inactive">Inactive</MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <TextField
-                label="From Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="min-w-[180px]"
-              />
-              <TextField
-                label="To Date"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="min-w-[180px]"
-              />
-            </div>
-          </div>
+            <select
+              value={filterForm}
+              onChange={(e) => setFilterForm(e.target.value)}
+              className="cms-input cursor-pointer"
+            >
+              <option value="all">All forms</option>
+              {getAllFormTitles().map((formTitle) => (
+                <option key={formTitle} value={formTitle}>
+                  {formTitle}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="cms-input cursor-pointer"
+            >
+              <option value="all">All status</option>
+              <option value="active">Active forms</option>
+              <option value="inactive">Inactive forms</option>
+            </select>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="cms-input"
+              title="From date"
+            />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="cms-input"
+              title="To date"
+            />
+          </form>
         </div>
-      </div>
 
-      {/* Error Alert */}
-      {error && (
-        <div className="mb-6">
-          <Alert severity="error" className="rounded-lg shadow-sm">
+        {error && (
+          <Alert severity="error" className="rounded-xl" onClose={() => setError(null)}>
             {error}
           </Alert>
-        </div>
-      )}
+        )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
-        <Card className="bg-white rounded-xl shadow-sm">
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Total Submissions
-            </Typography>
-            <Typography variant="h4" className="text-blue-600 font-bold">
-              {leads.length}
-            </Typography>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-xl shadow-sm">
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Filtered Results
-            </Typography>
-            <Typography variant="h4" className="text-green-600 font-bold">
-              {filteredLeads.length}
-            </Typography>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-xl shadow-sm">
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Active Forms
-            </Typography>
-            <Typography variant="h4" className="text-purple-600 font-bold">
-              {forms.filter(form => form.isActive).length}
-            </Typography>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-xl shadow-sm">
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Total Forms
-            </Typography>
-            <Typography variant="h4" className="text-orange-600 font-bold">
-              {forms.length}
-            </Typography>
-          </CardContent>
-        </Card>
-        <Card className="bg-white rounded-xl shadow-sm">
-          <CardContent>
-            <Typography color="textSecondary" gutterBottom>
-              Unique Fields
-            </Typography>
-            <Typography variant="h4" className="text-red-600 font-bold">
-              {getAllFieldNames().length}
-            </Typography>
-          </CardContent>
-        </Card>
+        {filteredLeads.length === 0 ? (
+          <EmptyState
+            icon={InboxIcon}
+            title="No enquiries yet"
+            message={
+              searchTerm || filterForm !== 'all' || filterStatus !== 'all' || startDate || endDate
+                ? 'Nothing matches these filters. Clear search or dates and try again.'
+                : 'Leads from the public website will appear here when someone submits a form.'
+            }
+            action={
+              <Link to="/form-management" className="cms-btn-primary">
+                Open form builder
+              </Link>
+            }
+          />
+        ) : (
+          <div className="space-y-3">
+            {filteredLeads.map((lead, index) => {
+              const preview = getLeadPreview(lead);
+              return (
+                <article
+                  key={lead._id || index}
+                  className="cms-card p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4"
+                >
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="w-11 h-11 rounded-full bg-[#C5A880]/20 text-[#A0725B] flex items-center justify-center font-semibold flex-shrink-0">
+                      {preview.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-[#191f26] truncate">{preview.name}</h3>
+                      <p className="text-sm text-[#5B584C] truncate">
+                        {[preview.email, preview.phone].filter(Boolean).join(' · ') || 'No contact fields'}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span className="text-[11px] uppercase tracking-wide px-2.5 py-1 rounded-full bg-[#f5f3ef] text-[#5B584C] border border-[#C5A880]/25">
+                          {lead.formTitle || 'Form'}
+                        </span>
+                        <span
+                          className={`text-[11px] px-2.5 py-1 rounded-full ${
+                            lead.formIsActive
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {lead.formIsActive ? 'Active form' : 'Inactive form'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 lg:gap-6">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleFilterByDate(
+                          lead.createdAt ? new Date(lead.createdAt).toISOString().split('T')[0] : ''
+                        )
+                      }
+                      className="text-left text-xs text-[#A0725B] hover:underline"
+                    >
+                      {lead.createdAt
+                        ? `${new Date(lead.createdAt).toLocaleDateString()} · ${new Date(lead.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                        : 'No date'}
+                    </button>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => openLeadDetail(lead)} className="cms-btn-outline !px-4">
+                        <VisibilityIcon className="w-4 h-4" />
+                        View
+                      </button>
+                      <button type="button" onClick={() => openDeleteDialog(lead)} className="cms-btn-outline !px-4">
+                        <DeleteIcon className="w-4 h-4" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Leads Table */}
-      {filteredLeads.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <h3 className="mt-2 text-lg font-medium text-gray-900">No leads found</h3>
-          <p className="mt-1 text-gray-500">
-            {searchTerm || filterField !== 'all'
-              ? 'Try adjusting your search or filter criteria'
-              : 'No form submissions available yet'}
-          </p>
-        </div>
-      ) : (
-        <Card className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow className="bg-gray-50">
-                  <TableCell className="font-semibold">Form Info</TableCell>
-                  <TableCell className="font-semibold">Lead Data</TableCell>
-                  <TableCell className="font-semibold">Submission Info</TableCell>
-                  <TableCell className="font-semibold">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredLeads.map((lead, index) => (
-                  <TableRow key={lead._id || index} className="hover:bg-gray-50">
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium text-gray-800">
-                          {lead.formTitle || 'Untitled Form'}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Page: {lead.formPage || 'Unknown'}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          ID: {lead.formId?.slice(-8) || 'N/A'}
-                        </div>
-                        <div className={`text-xs px-2 py-1 rounded-full inline-block ${lead.formIsActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
-                          }`}>
-                          {lead.formIsActive ? 'Active' : 'Inactive'}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1 max-w-xs">
-                        {lead.data && Object.entries(lead.data).map(([key, value]) => (
-                          <div key={key} className="flex items-center space-x-2">
-                            <span className="text-xs font-medium text-gray-600 min-w-[80px]">
-                              {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
-                            </span>
-                            <span className="text-xs text-gray-800 truncate">
-                              {String(value)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleFilterByDate(
-                              lead.createdAt
-                                ? new Date(lead.createdAt).toISOString().split('T')[0]
-                                : ''
-                            )
-                          }
-                          className="text-xs text-blue-600 hover:underline text-left"
-                          title="Click to filter by this date"
-                        >
-                          {new Date(lead.createdAt).toLocaleDateString()}
-                        </button>
-                        <div className="text-xs text-gray-600">
-                          {new Date(lead.createdAt).toLocaleTimeString()}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          IP: {lead.ipAddress || 'N/A'}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <IconButton
-                          size="small"
-                          onClick={() => openLeadDetail(lead)}
-                          className="text-blue-600 hover:bg-blue-50"
-                          title="View Details"
-                        >
-                          <VisibilityIcon />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => openDeleteDialog(lead)}
-                          className="text-red-600 hover:bg-red-50"
-                          title="Delete Lead"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Card>
-      )}
-
-      {/* Lead Detail Dialog */}
       <Dialog
         open={detailDialogOpen}
         onClose={closeLeadDetail}
         maxWidth="md"
         fullWidth
-        PaperProps={{
-          className: "rounded-xl"
-        }}
+        PaperProps={{ className: '!rounded-2xl' }}
       >
-        <DialogTitle className="text-lg font-semibold text-gray-800">
-          Lead Details
-        </DialogTitle>
+        <DialogTitle className="!font-display !text-2xl text-[#191f26]">Enquiry details</DialogTitle>
         <DialogContent>
           {selectedLead && (
-            <div className="space-y-6">
-              {/* Form Information */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <Typography variant="h6" className="text-blue-800 font-semibold mb-3">
-                  Form Information
-                </Typography>
-                <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-5 pt-2">
+              <div className="bg-[#f5f3ef] p-4 rounded-xl">
+                <p className="text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-3">Form</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div>
-                    <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                      Form Title
-                    </Typography>
-                    <Typography variant="body1" className="text-gray-800">
-                      {selectedLead.formTitle || 'Untitled Form'}
-                    </Typography>
+                    <span className="block text-[#5B584C] text-xs">Title</span>
+                    <span className="font-semibold text-[#191f26]">{selectedLead.formTitle || 'Untitled Form'}</span>
                   </div>
                   <div>
-                    <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                      Page
-                    </Typography>
-                    <Typography variant="body1" className="text-gray-800">
-                      {selectedLead.formPage || 'Unknown'}
-                    </Typography>
+                    <span className="block text-[#5B584C] text-xs">Page</span>
+                    <span className="font-semibold text-[#191f26]">{selectedLead.formPage || 'Unknown'}</span>
                   </div>
                   <div>
-                    <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                      Description
-                    </Typography>
-                    <Typography variant="body1" className="text-gray-800">
-                      {selectedLead.formDescription || 'No description'}
-                    </Typography>
+                    <span className="block text-[#5B584C] text-xs">Status</span>
+                    <span className="font-semibold text-[#191f26]">
+                      {selectedLead.formIsActive ? 'Active' : 'Inactive'}
+                    </span>
                   </div>
                   <div>
-                    <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                      Status
-                    </Typography>
-                    <Typography variant="body1" className="text-gray-800">
-                      <span className={`px-2 py-1 rounded-full text-xs ${selectedLead.formIsActive
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                        }`}>
-                        {selectedLead.formIsActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                      Form ID
-                    </Typography>
-                    <Typography variant="body1" className="text-gray-800 font-mono">
-                      {selectedLead.formId || 'N/A'}
-                    </Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                      Fields Count
-                    </Typography>
-                    <Typography variant="body1" className="text-gray-800">
-                      {selectedLead.formFields?.length || 0} fields
-                    </Typography>
+                    <span className="block text-[#5B584C] text-xs">Submitted</span>
+                    <span className="font-semibold text-[#191f26]">
+                      {new Date(selectedLead.createdAt).toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Form Fields Information */}
-              {selectedLead.formFields && selectedLead.formFields.length > 0 && (
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <Typography variant="h6" className="text-green-800 font-semibold mb-3">
-                    Form Fields
-                  </Typography>
-                  <div className="space-y-2">
-                    {selectedLead.formFields.map((field, index) => (
-                      <div key={field._id || index} className="border-b border-green-200 pb-2">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <Typography variant="subtitle2" className="text-green-700 font-medium">
-                              {field.label} ({field.type})
-                            </Typography>
-                            <Typography variant="body2" className="text-green-600">
-                              Field: {field.name}
-                            </Typography>
-                            {field.placeholder && (
-                              <Typography variant="body2" className="text-green-600">
-                                Placeholder: {field.placeholder}
-                              </Typography>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <Typography variant="caption" className={`px-2 py-1 rounded-full text-xs ${field.validation?.required
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-gray-100 text-gray-800'
-                              }`}>
-                              {field.validation?.required ? 'Required' : 'Optional'}
-                            </Typography>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Lead Data */}
               {selectedLead.data && (
                 <div>
-                  <Typography variant="h6" className="text-gray-800 font-semibold mb-3">
-                    Lead Data
-                  </Typography>
+                  <p className="text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-3">Lead data</p>
                   <div className="space-y-3">
                     {Object.entries(selectedLead.data).map(([key, value]) => {
-                      // Find the corresponding field to get the label
-                      const field = selectedLead.formFields?.find(f => f.name === key);
-                      const label = field?.label || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
+                      const field = selectedLead.formFields?.find((f) => f.name === key);
+                      const label =
+                        field?.label || key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
                       return (
-                        <div key={key} className="border-b border-gray-200 pb-3">
-                          <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                            {label}
-                          </Typography>
-                          <Typography variant="body1" className="text-gray-800 mt-1">
-                            {String(value) || '(Empty)'}
-                          </Typography>
+                        <div key={key} className="border-b border-[#C5A880]/20 pb-3">
+                          <p className="text-xs text-[#5B584C]">{label}</p>
+                          <p className="text-[#191f26] mt-0.5">{String(value) || '(Empty)'}</p>
                         </div>
                       );
                     })}
                   </div>
                 </div>
               )}
-
-              {/* Submission Information */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <Typography variant="h6" className="text-gray-800 font-semibold mb-3">
-                  Submission Information
-                </Typography>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                      Submitted On
-                    </Typography>
-                    <Typography variant="body1" className="text-gray-800">
-                      {new Date(selectedLead.createdAt).toLocaleDateString()} at {new Date(selectedLead.createdAt).toLocaleTimeString()}
-                    </Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                      IP Address
-                    </Typography>
-                    <Typography variant="body1" className="text-gray-800 font-mono">
-                      {selectedLead.ipAddress || 'N/A'}
-                    </Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                      User Agent
-                    </Typography>
-                    <Typography variant="body2" className="text-gray-800 text-sm">
-                      {selectedLead.userAgent || 'N/A'}
-                    </Typography>
-                  </div>
-                  <div>
-                    <Typography variant="subtitle2" className="text-gray-600 font-medium">
-                      Submission ID
-                    </Typography>
-                    <Typography variant="body1" className="text-gray-800 font-mono">
-                      {selectedLead._id || 'N/A'}
-                    </Typography>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
         </DialogContent>
-        <DialogActions className="px-6 py-4 border-t border-gray-200">
-          <Button onClick={closeLeadDetail} className="text-gray-600">
+        <DialogActions className="!p-4 !border-t !border-[#C5A880]/20">
+          <button type="button" onClick={closeLeadDetail} className="cms-btn-primary">
             Close
-          </Button>
+          </button>
         </DialogActions>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={closeDeleteDialog}
-        PaperProps={{
-          className: "rounded-xl"
-        }}
+        PaperProps={{ className: '!rounded-2xl' }}
       >
-        <DialogTitle className="text-lg font-semibold text-gray-800">
-          Confirm Delete
-        </DialogTitle>
+        <DialogTitle className="!text-lg !font-semibold text-[#191f26]">Delete enquiry</DialogTitle>
         <DialogContent>
-          <DialogContentText className="text-gray-600">
-            Are you sure you want to delete this lead? This action cannot be undone.
+          <DialogContentText className="!text-[#5B584C]">
+            Remove this lead permanently? This cannot be undone.
           </DialogContentText>
         </DialogContent>
-        <DialogActions className="px-6 py-4 border-t border-gray-200">
-          <Button onClick={closeDeleteDialog} className="text-gray-600">
+        <DialogActions className="!p-4 gap-2">
+          <button type="button" onClick={closeDeleteDialog} className="cms-btn-outline">
             Cancel
-          </Button>
-          <Button
-            onClick={confirmDelete}
-            className="bg-red-600 hover:bg-red-700 text-white"
-          >
+          </button>
+          <button type="button" onClick={confirmDelete} className="cms-btn-primary">
             Delete
-          </Button>
+          </button>
         </DialogActions>
       </Dialog>
-    </div>
+    </PageShell>
   );
 };
 

@@ -27,9 +27,9 @@ const FormPreviewPage = () => {
         let response;
 
         if (formId) {
-          response = await fetch(`https://api.risingspaces.in/api/forms/forms/${formId}`);
+          response = await fetch(`http://localhost:5000/api/forms/forms/${formId}`);
         } else if (page) {
-          response = await fetch(`https://api.risingspaces.in/api/forms/page/${page}`);
+          response = await fetch(`http://localhost:5000/api/forms/page/${page}`);
         } else {
           throw new Error('Either formId or page must be provided');
         }
@@ -61,7 +61,7 @@ const FormPreviewPage = () => {
         data: formValues
       };
 
-      const response = await fetch(`https://api.risingspaces.in/api/forms/forms/${formId}/submit`, {
+      const response = await fetch(`http://localhost:5000/api/forms/forms/${formId}/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -131,7 +131,7 @@ const FormPreviewPage = () => {
             {isPreview && formId && (
               <button
                 onClick={() => setShowApiGuide(true)}
-                className="flex items-center px-3 py-2 border border-indigo-300 text-indigo-600 rounded-md hover:bg-indigo-50 transition-colors"
+                className="cms-btn-outline"
                 title="View API Integration Guide"
               >
                 <CodeIcon className="mr-2" />
@@ -243,7 +243,7 @@ const FormPreviewPage = () => {
               <div className="mt-6">
                 <button
                   onClick={() => navigate(-1)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="cms-btn-primary"
                 >
                   Go back
                 </button>
@@ -396,7 +396,7 @@ const FormRenderer = ({ formConfig, onSubmit, isSubmitting, isPreview }) => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-75 disabled:cursor-not-allowed"
+          className="cms-btn-primary disabled:opacity-75"
         >
           {isSubmitting ? (
             <>

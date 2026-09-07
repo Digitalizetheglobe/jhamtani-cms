@@ -4,15 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Add as AddIcon,
   Search as SearchIcon,
-  Code as CodeIcon,
-  Visibility as VisibilityIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
   DesktopWindows as DesktopIcon,
   TabletMac as TabletIcon,
   PhoneIphone as PhoneIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
+  Visibility as VisibilityIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import {
@@ -32,6 +27,8 @@ import {
 } from '../api/bannerApi';
 import BannerApiGuide from './BannerApiGuide';
 import BannerPreviewModal from './BannerPreviewModal';
+import PageShell from '../components/PageShell';
+import { PageHero, StatCards, EmptyState } from '../components/PageHero';
 
 const BannerManagementDashboard = () => {
   const navigate = useNavigate();
@@ -125,87 +122,55 @@ const BannerManagementDashboard = () => {
   const activeBanners = banners.filter((b) => b.isActive).length;
   const uniquePlacements = new Set(banners.map((b) => b.placement)).size;
 
+  const stats = [
+    { label: 'Banners', value: totalBanners, hint: 'All campaigns' },
+    { label: 'Live', value: activeBanners, hint: 'Visible on site' },
+    { label: 'Draft', value: totalBanners - activeBanners, hint: 'Inactive' },
+    { label: 'Placements', value: uniquePlacements, hint: 'Unique slots' },
+  ];
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            Banner Management
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Manage multi-device responsive banners & get integration code for all landing pages
-          </p>
-        </div>
+    <PageShell>
+      <div className="space-y-5 sm:space-y-6">
+      <PageHero
+        kicker="Homepage"
+        title="Banners"
+        subtitle="Hero and campaign media for landing pages."
+      >
+        <button type="button" onClick={fetchBannerList} className="cms-btn-outline">
+          <RefreshIcon className="w-4 h-4" />
+          Refresh
+        </button>
+        <button type="button" onClick={() => navigate('/banner-management/create')} className="cms-btn-primary">
+          <AddIcon className="w-4 h-4" />
+          Create banner
+        </button>
+      </PageHero>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={fetchBannerList}
-            className="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-red-600 hover:border-red-200 shadow-sm transition"
-            title="Refresh list"
-          >
-            <RefreshIcon fontSize="small" />
-          </button>
-          <button
-            onClick={() => navigate('/banner-management/create')}
-            className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:shadow-lg transition flex items-center gap-2 text-sm"
-          >
-            <AddIcon fontSize="small" />
-            <span>Create New Banner</span>
-          </button>
-        </div>
-      </div>
+      <StatCards items={stats} />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Banners</p>
-            <h3 className="text-2xl font-bold text-gray-800 mt-1">{totalBanners}</h3>
+      <div className="cms-card p-4 sm:p-5">
+        <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="relative sm:col-span-2">
+            <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search by banner title..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="cms-input pl-10"
+            />
           </div>
-          <div className="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-bold text-lg">
-            🖼️
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active (Live)</p>
-            <h3 className="text-2xl font-bold text-green-600 mt-1">{activeBanners}</h3>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center font-bold text-lg">
-            ⚡
-          </div>
-        </div>
-      </div>
-
-      {/* Search & Filters */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Search */}
-        <form onSubmit={handleSearchSubmit} className="relative w-full md:w-96">
-          <input
-            type="text"
-            placeholder="Search by banner title..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
-          />
-          <SearchIcon className="absolute left-3 top-2.5 text-gray-400 text-sm" />
-        </form>
-
-        {/* Status Filter */}
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-gray-500 font-medium">Status:</span>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-700 outline-none focus:ring-2 focus:ring-red-500"
+            className="cms-input cursor-pointer"
           >
-            <option value="all">All Status</option>
-            <option value="true">Active Only</option>
-            <option value="false">Inactive Only</option>
+            <option value="all">All status</option>
+            <option value="true">Active only</option>
+            <option value="false">Inactive only</option>
           </select>
-        </div>
+        </form>
       </div>
 
       {/* Error notification */}
@@ -219,28 +184,25 @@ const BannerManagementDashboard = () => {
 
       {/* Banner Grid */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center min-h-[40vh]">
-          <CircularProgress />
-          <p className="mt-4 text-gray-500 text-sm">Loading banners...</p>
+        <div className="cms-card p-16 flex flex-col items-center justify-center">
+          <CircularProgress sx={{ color: '#C5A880' }} />
+          <p className="mt-4 text-[#5B584C] text-sm">Loading banners...</p>
         </div>
       ) : banners.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center max-w-lg mx-auto shadow-sm my-8">
-          <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-            🖼️
-          </div>
-          <h3 className="text-lg font-bold text-gray-800">No Banners Found</h3>
-          <p className="text-gray-500 text-sm mt-1 mb-6">
-            {searchTerm || selectedPlacement !== 'all' || selectedStatus !== 'all'
-              ? 'No banners match your active filter. Try resetting your search.'
-              : 'Get started by creating your first responsive banner for any landing page.'}
-          </p>
-          <button
-            onClick={() => navigate('/banner-management/create')}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition"
-          >
-            Create First Banner
-          </button>
-        </div>
+        <EmptyState
+          icon={DesktopIcon}
+          title="No banners yet"
+          message={
+            searchTerm || selectedPlacement !== 'all' || selectedStatus !== 'all'
+              ? 'Nothing matches these filters. Clear search and try again.'
+              : 'Create the first responsive banner for a landing page.'
+          }
+          action={
+            <button type="button" onClick={() => navigate('/banner-management/create')} className="cms-btn-primary">
+              Create banner
+            </button>
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {banners.map((banner) => {
@@ -253,7 +215,7 @@ const BannerManagementDashboard = () => {
                 layout
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                className="cms-card overflow-hidden flex flex-col justify-between"
               >
                 {/* Image / Video Thumbnail */}
                 <div>
@@ -346,8 +308,7 @@ const BannerManagementDashboard = () => {
                 </div>
 
                 {/* Footer Actions */}
-                <div className="px-5 py-3.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                  {/* Status toggle */}
+                <div className="px-4 py-3 bg-[#f5f3ef] border-t border-[#C5A880]/20 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -356,49 +317,42 @@ const BannerManagementDashboard = () => {
                         onChange={() => handleToggleStatus(banner)}
                         className="sr-only peer"
                       />
-                      <div className="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-600"></div>
+                      <div className="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#C5A880]"></div>
                     </label>
-                    <span className="text-[11px] text-gray-500 font-medium">
+                    <span className="text-[11px] text-[#5B584C] font-medium">
                       {banner.isActive ? 'Active' : 'Draft'}
                     </span>
                   </div>
 
-                  {/* Buttons */}
-                  <div className="flex items-center gap-1">
-                    {/* API Guide Button */}
+                  <div className="flex flex-wrap gap-1">
                     <button
+                      type="button"
                       onClick={() => setGuideBanner(banner)}
-                      className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition"
-                      title="API Guide & Code Snippet"
+                      className="cms-btn-outline !px-3 !py-1.5 text-xs"
+                      title="API Guide"
                     >
-                      <CodeIcon fontSize="small" />
+                      API
                     </button>
-
-                    {/* Preview Button */}
                     <button
+                      type="button"
                       onClick={() => setPreviewBanner(banner)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                      title="Device Preview"
+                      className="cms-btn-outline !px-3 !py-1.5 text-xs"
                     >
-                      <VisibilityIcon fontSize="small" />
+                      Preview
                     </button>
-
-                    {/* Edit Button */}
                     <button
+                      type="button"
                       onClick={() => navigate(`/banner-management/edit/${banner._id}`)}
-                      className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition"
-                      title="Edit Banner"
+                      className="cms-btn-primary !px-3 !py-1.5 text-xs"
                     >
-                      <EditIcon fontSize="small" />
+                      Edit
                     </button>
-
-                    {/* Delete Button */}
                     <button
+                      type="button"
                       onClick={() => setBannerToDelete(banner)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
-                      title="Delete Banner"
+                      className="cms-btn-outline !px-3 !py-1.5 text-xs"
                     >
-                      <DeleteIcon fontSize="small" />
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -428,38 +382,34 @@ const BannerManagementDashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={Boolean(bannerToDelete)}
         onClose={() => setBannerToDelete(null)}
-        PaperProps={{ className: 'rounded-2xl p-2' }}
+        PaperProps={{ className: '!rounded-2xl' }}
       >
-        <DialogTitle className="font-bold text-gray-900">Confirm Banner Deletion</DialogTitle>
+        <DialogTitle className="!text-lg !font-semibold text-[#191f26]">Delete banner</DialogTitle>
         <DialogContent>
-          <DialogContentText className="text-gray-600 text-sm">
-            Are you sure you want to delete the banner{' '}
-            <strong className="text-gray-900">"{bannerToDelete?.title}"</strong> (Placement:{' '}
-            <code className="text-red-600">{bannerToDelete?.placement}</code>)? This action will
-            remove the banner files and cannot be undone.
+          <DialogContentText className="!text-[#5B584C]">
+            Remove "{bannerToDelete?.title}" (placement: {bannerToDelete?.placement}) permanently?
+            Banner files will be deleted and this cannot be undone.
           </DialogContentText>
         </DialogContent>
-        <DialogActions className="p-4 gap-2">
-          <button
-            onClick={() => setBannerToDelete(null)}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 text-sm font-medium transition"
-          >
+        <DialogActions className="!p-4 gap-2">
+          <button type="button" onClick={() => setBannerToDelete(null)} className="cms-btn-outline">
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleDeleteConfirm}
             disabled={isDeleting}
-            className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold shadow transition disabled:opacity-50"
+            className="cms-btn-primary disabled:opacity-50"
           >
-            {isDeleting ? 'Deleting...' : 'Delete Banner'}
+            {isDeleting ? 'Deleting...' : 'Delete'}
           </button>
         </DialogActions>
       </Dialog>
-    </div>
+      </div>
+    </PageShell>
   );
 };
 

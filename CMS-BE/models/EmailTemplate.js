@@ -1,14 +1,18 @@
-///models/EmailTemplate.js
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/db');
+const { wrapModel } = require('./mongooseCompat');
 
-const emailTemplateSchema = new mongoose.Schema({
-  name: { type: String, required: true }, // Template name
-  subject: { type: String, required: true }, // Email subject
-  body: { type: String, required: true }, // Email body (can include placeholders)
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-}, { timestamps: true });
+const EmailTemplateModel = sequelize.define(
+  'EmailTemplate',
+  {
+    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    name: { type: DataTypes.STRING, allowNull: false },
+    subject: { type: DataTypes.STRING, allowNull: false },
+    body: { type: DataTypes.TEXT, allowNull: false },
+    createdBy: { type: DataTypes.UUID, allowNull: true },
+    updatedBy: { type: DataTypes.UUID, allowNull: true },
+  },
+  { tableName: 'email_templates', timestamps: true }
+);
 
-const EmailTemplate = mongoose.model('EmailTemplate', emailTemplateSchema);
-
-module.exports = EmailTemplate;
+module.exports = wrapModel(EmailTemplateModel);
