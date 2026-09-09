@@ -1,13 +1,16 @@
 require('./Admin');
 require('./Announcement');
+require('./Award');
 require('./Banner');
 require('./Blog');
+require('./Brochure');
 require('./DynamicForm');
 require('./EmailTemplate');
 require('./Event');
 require('./GalleryPhoto');
 require('./HappyClient');
 require('./Project');
+require('./ProjectLocation');
 require('./Team');
 require('./Testimonial');
 require('./VideoUpload');

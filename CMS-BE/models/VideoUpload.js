@@ -6,7 +6,12 @@ const VideoUploadModel = sequelize.define(
   'VideoUpload',
   {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    sourceType: { type: DataTypes.STRING, allowNull: false, defaultValue: 'local' }, // youtube | local
+    youtubeUrl: { type: DataTypes.STRING, allowNull: true },
+    projectName: { type: DataTypes.STRING, allowNull: true },
+    tagline: { type: DataTypes.STRING, allowNull: true },
     title: { type: DataTypes.STRING, allowNull: true },
+    location: { type: DataTypes.STRING, allowNull: true },
     description: { type: DataTypes.TEXT, allowNull: true },
     videoUrl: { type: DataTypes.STRING, allowNull: true },
     thumbnailUrl: { type: DataTypes.STRING, allowNull: true },

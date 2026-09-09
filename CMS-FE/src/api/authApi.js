@@ -84,6 +84,22 @@ export const getCurrentAdmin = async () => {
   }
 };
 
+// Change Password
+export const changePassword = async ({ currentPassword, newPassword }) => {
+  try {
+    const response = await api.put('/api/auth/change-password', {
+      currentPassword,
+      newPassword,
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response?.data) {
+      throw error.response.data;
+    }
+    throw { message: error.message || 'Failed to change password', success: false };
+  }
+};
+
 // Logout (client-side only)
 export const logoutAdmin = () => {
   localStorage.removeItem('adminToken');

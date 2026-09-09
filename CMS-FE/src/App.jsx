@@ -64,6 +64,12 @@ import VideoUploads from "./components/MediaManager/VideoUploads";
 
 import HappyClients from "./components/MediaManager/HappyClients";
 
+import Awards from "./components/MediaManager/Awards";
+
+import BrochureManagement from "./BrochureManagement/BrochureManagement";
+
+import ProjectLocationManagement from "./ProjectLocationManagement/ProjectLocationManagement";
+
 import { useAdminAuth } from "./context/AdminAuthContext";
 
 import logo from "./assets/jhamtani-logo.webp";
@@ -154,7 +160,7 @@ function AppWrapper() {
 
           showChrome
 
-            ? "flex-grow ml-0 lg:ml-64 transition-all duration-300 w-full min-w-0 pt-16 lg:pt-0"
+            ? "flex-grow ml-0 lg:ml-[17.5rem] transition-all duration-300 w-full min-w-0 pt-16 lg:pt-0"
 
             : "flex-grow transition-all duration-300 w-full min-w-0"
 
@@ -197,6 +203,10 @@ function AppWrapper() {
           <Route path="/form-management/submissions/:formId" element={<ProtectedRoute><FormSubmissionsView /></ProtectedRoute>} />
 
           <Route path="/form-management/preview/:formId" element={<ProtectedRoute><FormPreviewPage /></ProtectedRoute>} />
+
+          <Route path="/brochure" element={<ProtectedRoute><BrochureManagement /></ProtectedRoute>} />
+
+          <Route path="/project-location" element={<ProtectedRoute><ProjectLocationManagement /></ProtectedRoute>} />
 
           <Route path="/leads-management" element={<ProtectedRoute><LeadsManagement /></ProtectedRoute>} />
 
@@ -241,6 +251,8 @@ function AppWrapper() {
           <Route path="/media-manager/video-uploads" element={<ProtectedRoute><VideoUploads /></ProtectedRoute>} />
 
           <Route path="/media-manager/happy-clients" element={<ProtectedRoute><HappyClients /></ProtectedRoute>} />
+
+          <Route path="/media-manager/awards" element={<ProtectedRoute><Awards /></ProtectedRoute>} />
 
 
 

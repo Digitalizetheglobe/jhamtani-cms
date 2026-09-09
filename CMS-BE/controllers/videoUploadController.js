@@ -115,34 +115,62 @@ exports.createVideoUpload = [
   },
   async (req, res) => {
     try {
-      const { title, description, thumbnailUrl, duration, format, resolution, category, tags, isActive, order, isPublic } = req.body;
-      
-      let videoUrl = '';
-      if (req.file) {
-        videoUrl = `/uploads/videos/${req.file.filename}`;
-        console.log('Video uploaded:', req.file.filename);
-        console.log('Video URL:', videoUrl);
-      } else {
-        console.log('No video file uploaded');
-      }
-      
-      const video = new VideoUpload({
+      const {
+        sourceType = 'local',
+        youtubeUrl,
+        projectName,
+        tagline,
         title,
+        location,
         description,
-        videoUrl,
+        thumbnailUrl,
+        duration,
+        format,
+        resolution,
+        category,
+        tags,
+        isActive,
+        order,
+        isPublic,
+      } = req.body;
+
+      const source = sourceType === 'youtube' ? 'youtube' : 'local';
+
+      if (source === 'youtube') {
+        if (!youtubeUrl || !String(youtubeUrl).trim()) {
+          return res.status(400).json({ message: 'YouTube URL is required' });
+        }
+      } else if (!req.file) {
+        return res.status(400).json({ message: 'Local video file is required' });
+      }
+
+      let videoUrl = '';
+      if (source === 'local' && req.file) {
+        videoUrl = `/uploads/videos/${req.file.filename}`;
+      }
+
+      const video = new VideoUpload({
+        sourceType: source,
+        youtubeUrl: source === 'youtube' ? String(youtubeUrl).trim() : null,
+        projectName: projectName || null,
+        tagline: tagline || null,
+        title,
+        location: location || null,
+        description,
+        videoUrl: source === 'local' ? videoUrl : null,
         thumbnailUrl,
         duration: duration || 0,
-        fileSize: req.file ? req.file.size : null,
+        fileSize: source === 'local' && req.file ? req.file.size : null,
         format: format || (req.file ? req.file.mimetype : null),
         resolution,
         category,
-        tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+        tags: tags ? tags.split(',').map((tag) => tag.trim()) : [],
         isActive: isActive === 'true' || isActive === true,
         order: order || 0,
         uploadedBy: req.body.uploadedBy || 'Admin',
-        isPublic: isPublic === 'true' || isPublic === true
+        isPublic: isPublic === undefined ? true : isPublic === 'true' || isPublic === true,
       });
-      
+
       const savedVideo = await video.save();
       res.status(201).json(savedVideo);
     } catch (error) {
@@ -165,38 +193,94 @@ exports.updateVideoUpload = [
   },
   async (req, res) => {
     try {
-      const { title, description, thumbnailUrl, duration, format, resolution, category, tags, isActive, order, isPublic } = req.body;
-      
-      const updateData = {
+      const {
+        sourceType,
+        youtubeUrl,
+        projectName,
+        tagline,
         title,
+        location,
         description,
         thumbnailUrl,
-        duration: duration || 0,
-        format: format || (req.file ? req.file.mimetype : null),
+        duration,
+        format,
         resolution,
         category,
-        tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
+        tags,
+        isActive,
+        order,
+        isPublic,
+      } = req.body;
+
+      const existing = await VideoUpload.findById(req.params.id);
+      if (!existing) {
+        return res.status(404).json({ message: 'Video upload not found' });
+      }
+
+      const source =
+        sourceType === 'youtube' || sourceType === 'local'
+          ? sourceType
+          : existing.sourceType || 'local';
+
+      if (source === 'youtube') {
+        const url = youtubeUrl !== undefined ? String(youtubeUrl || '').trim() : existing.youtubeUrl;
+        if (!url) {
+          return res.status(400).json({ message: 'YouTube URL is required' });
+        }
+      }
+
+      if (source === 'local' && !req.file && !existing.videoUrl) {
+        return res.status(400).json({ message: 'Local video file is required' });
+      }
+
+      const updateData = {
+        sourceType: source,
+        youtubeUrl: source === 'youtube'
+          ? (youtubeUrl !== undefined ? String(youtubeUrl).trim() : existing.youtubeUrl)
+          : null,
+        projectName: projectName !== undefined ? projectName || null : existing.projectName,
+        tagline: tagline !== undefined ? tagline || null : existing.tagline,
+        title: title !== undefined ? title : existing.title,
+        location: location !== undefined ? location || null : existing.location,
+        description: description !== undefined ? description : existing.description,
+        thumbnailUrl,
+        duration: duration || 0,
+        format: format || (req.file ? req.file.mimetype : existing.format),
+        resolution,
+        category,
+        tags: tags ? tags.split(',').map((tag) => tag.trim()) : existing.tags || [],
         isActive: isActive === 'true' || isActive === true,
         order: order || 0,
-        isPublic: isPublic === 'true' || isPublic === true
+        isPublic: isPublic === 'true' || isPublic === true,
       };
-      
-      // If new video is uploaded, update videoUrl and file info
-      if (req.file) {
+
+      if (source === 'local' && req.file) {
+        if (existing.videoUrl && existing.sourceType === 'local') {
+          const oldPath = path.join(__dirname, '..', existing.videoUrl);
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+          }
+        }
         updateData.videoUrl = `/uploads/videos/${req.file.filename}`;
         updateData.fileSize = req.file.size;
       }
-      
-      const video = await VideoUpload.findByIdAndUpdate(
-        req.params.id,
-        updateData,
-        { new: true, runValidators: true }
-      );
-      
-      if (!video) {
-        return res.status(404).json({ message: 'Video upload not found' });
+
+      if (source === 'youtube') {
+        if (existing.videoUrl && existing.sourceType === 'local') {
+          const oldPath = path.join(__dirname, '..', existing.videoUrl);
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+          }
+        }
+        updateData.videoUrl = null;
+        updateData.fileSize = null;
       }
-      
+
+      const video = await VideoUpload.findByIdAndUpdate(req.params.id, updateData, {
+        new: true,
+        runValidators: true,
+      });
+
       res.status(200).json(video);
     } catch (error) {
       res.status(500).json({ message: 'Server error', error: error.message });
@@ -214,8 +298,8 @@ exports.deleteVideoUpload = async (req, res) => {
       return res.status(404).json({ message: 'Video upload not found' });
     }
     
-    // Delete the video file from server
-    if (video.videoUrl) {
+    // Delete local video file from server (skip YouTube links)
+    if (video.sourceType !== 'youtube' && video.videoUrl && video.videoUrl.startsWith('/uploads/')) {
       const videoPath = path.join(__dirname, '..', video.videoUrl);
       if (fs.existsSync(videoPath)) {
         fs.unlinkSync(videoPath);

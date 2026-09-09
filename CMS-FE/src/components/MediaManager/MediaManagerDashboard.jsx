@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaImages, FaPlay, FaUsers } from 'react-icons/fa';
+import { FaImages, FaPlay, FaUsers, FaTrophy } from 'react-icons/fa';
 import PageShell from '../PageShell';
 import { PageHero } from '../PageHero';
 
@@ -24,6 +24,12 @@ const MediaManagerDashboard = () => {
       subtitle: 'Client portraits and stories',
       icon: FaUsers,
     },
+    {
+      to: '/media-manager/awards',
+      title: 'Awards',
+      subtitle: 'Recognition logos and award images',
+      icon: FaTrophy,
+    },
   ];
 
   return (
@@ -32,9 +38,9 @@ const MediaManagerDashboard = () => {
         <PageHero
           kicker="Media"
           title="Library"
-          subtitle="Gallery photos, videos, and happy faces for the public site."
+          subtitle="Gallery photos, videos, happy faces, and awards for the public site."
         />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {modules.map((item) => (
             <Link
               key={item.to}

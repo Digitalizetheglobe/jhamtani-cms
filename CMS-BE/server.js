@@ -27,6 +27,9 @@ app.use('/api/youtube-videos', require('./routes/youtubeVideoRoutes'));
 app.use('/api/gallery-photos', require('./routes/galleryPhotoRoutes'));
 app.use('/api/video-uploads', require('./routes/videoUploadRoutes'));
 app.use('/api/happy-clients', require('./routes/happyClientRoutes'));
+app.use('/api/awards', require('./routes/awardRoutes'));
+app.use('/api/brochures', require('./routes/brochureRoutes'));
+app.use('/api/project-locations', require('./routes/projectLocationRoutes'));
 app.use('/api/banners', require('./routes/bannerRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 
