@@ -1,36 +1,40 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaMapMarkerAlt, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaHardHat, FaExternalLinkAlt, FaTimes } from 'react-icons/fa';
 import CircularProgress from '@mui/material/CircularProgress';
-import PlaceIcon from '@mui/icons-material/Place';
+import ConstructionIcon from '@mui/icons-material/Construction';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
 
 const API_BASE = 'http://localhost:5000';
-const PROJECT_TYPES = ['Residential', 'Commercial', 'Studio'];
+const PROJECT_CATEGORIES = ['Residential', 'Commercial', 'Studio'];
 
 const emptyForm = {
   projectName: '',
-  projectType: 'Residential',
+  title: '',
+  month: '',
+  projectCategory: 'Residential',
   location: '',
   tagline: '',
-  locationUrl: '',
+  projectLink: '',
+  order: 0,
   isActive: true,
 };
 
-const ProjectLocationManagement = () => {
+const SiteUpdateManagement = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImageFiles, setNewImageFiles] = useState([]);
+  const [newImagePreviews, setNewImagePreviews] = useState([]);
   const imageInputRef = useRef(null);
 
   const formatUrl = (url) => {
@@ -45,15 +49,15 @@ const ProjectLocationManagement = () => {
     setLoading(true);
     setError('');
     try {
-      let response = await fetch('/api/project-locations?limit=100');
+      let response = await fetch('/api/site-updates?limit=100');
       if (!response.ok) {
-        response = await fetch(`${API_BASE}/api/project-locations?limit=100`);
+        response = await fetch(`${API_BASE}/api/site-updates?limit=100`);
       }
-      if (!response.ok) throw new Error('Failed to load project locations');
+      if (!response.ok) throw new Error('Failed to load site updates');
       const data = await response.json();
-      setItems(data.locations || []);
+      setItems(data.siteUpdates || []);
     } catch (err) {
-      setError(err.message || 'Failed to load project locations');
+      setError(err.message || 'Failed to load site updates');
       setItems([]);
     } finally {
       setLoading(false);
@@ -67,8 +71,9 @@ const ProjectLocationManagement = () => {
   const resetForm = () => {
     setFormData(emptyForm);
     setEditing(null);
-    setImageFile(null);
-    setImagePreview('');
+    setExistingImages([]);
+    setNewImageFiles([]);
+    setNewImagePreviews([]);
     if (imageInputRef.current) imageInputRef.current.value = '';
   };
 
@@ -77,16 +82,21 @@ const ProjectLocationManagement = () => {
       setEditing(item);
       setFormData({
         projectName: item.projectName || '',
-        projectType: item.projectType || 'Residential',
+        title: item.title || '',
+        month: item.month || '',
+        projectCategory: item.projectCategory || 'Residential',
         location: item.location || '',
         tagline: item.tagline || '',
-        locationUrl: item.locationUrl || '',
+        projectLink: item.projectLink || '',
+        order: item.order ?? 0,
         isActive: item.isActive !== false,
       });
-      setImagePreview(formatUrl(item.projectImage));
-      setImageFile(null);
+      setExistingImages(Array.isArray(item.images) ? item.images : []);
+      setNewImageFiles([]);
+      setNewImagePreviews([]);
     } else {
       resetForm();
+      setFormData((prev) => ({ ...prev, order: items.length }));
     }
     setShowModal(true);
   };
@@ -96,19 +106,33 @@ const ProjectLocationManagement = () => {
     resetForm();
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result);
-    reader.readAsDataURL(file);
+  const handleImagesChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setNewImageFiles((prev) => [...prev, ...files]);
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewImagePreviews((prev) => [...prev, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+    if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
+  const removeExistingImage = (index) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewImage = (index) => {
+    setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.projectName.trim()) {
-      setError('Project name is required');
+    if (!formData.projectName.trim() || !formData.title.trim()) {
+      setError('Project name and update title are required');
       return;
     }
 
@@ -117,53 +141,55 @@ const ProjectLocationManagement = () => {
     try {
       const body = new FormData();
       body.append('projectName', formData.projectName.trim());
-      body.append('projectType', formData.projectType);
+      body.append('title', formData.title.trim());
+      body.append('month', formData.month.trim());
+      body.append('projectCategory', formData.projectCategory);
       body.append('location', formData.location.trim());
       body.append('tagline', formData.tagline.trim());
-      body.append('locationUrl', formData.locationUrl.trim());
+      body.append('projectLink', formData.projectLink.trim());
+      body.append('order', formData.order);
       body.append('isActive', formData.isActive);
-      if (imageFile) body.append('projectImage', imageFile);
+      body.append('existingImages', JSON.stringify(existingImages));
+      newImageFiles.forEach((file) => body.append('images', file));
 
       const url = editing
-        ? `${API_BASE}/api/project-locations/${editing._id}`
-        : `${API_BASE}/api/project-locations`;
+        ? `${API_BASE}/api/site-updates/${editing._id}`
+        : `${API_BASE}/api/site-updates`;
       const method = editing ? 'PUT' : 'POST';
 
       const response = await fetch(url, { method, body });
-
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to save project location');
+        throw new Error(data.message || 'Failed to save site update');
       }
 
       closeModal();
       await fetchItems();
     } catch (err) {
-      setError(err.message || 'Failed to save project location');
+      setError(err.message || 'Failed to save site update');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (item) => {
-    if (!window.confirm(`Delete location for "${item.projectName}"?`)) return;
+    if (!window.confirm(`Delete site update "${item.title}"?`)) return;
     try {
-      const response = await fetch(`${API_BASE}/api/project-locations/${item._id}`, {
+      const response = await fetch(`${API_BASE}/api/site-updates/${item._id}`, {
         method: 'DELETE',
       });
-      if (!response.ok) throw new Error('Failed to delete project location');
+      if (!response.ok) throw new Error('Failed to delete site update');
       setItems((prev) => prev.filter((row) => row._id !== item._id));
     } catch (err) {
-      setError(err.message || 'Failed to delete project location');
+      setError(err.message || 'Failed to delete site update');
     }
   };
 
   const handleToggle = async (item) => {
     try {
-      const response = await fetch(
-        `${API_BASE}/api/project-locations/${item._id}/toggle-status`,
-        { method: 'PATCH' }
-      );
+      const response = await fetch(`${API_BASE}/api/site-updates/${item._id}/toggle-status`, {
+        method: 'PATCH',
+      });
       if (!response.ok) throw new Error('Failed to update status');
       const result = await response.json();
       setItems((prev) =>
@@ -181,27 +207,29 @@ const ProjectLocationManagement = () => {
     const matchesSearch =
       !q ||
       (item.projectName || '').toLowerCase().includes(q) ||
+      (item.title || '').toLowerCase().includes(q) ||
       (item.location || '').toLowerCase().includes(q) ||
-      (item.tagline || '').toLowerCase().includes(q) ||
-      (item.projectType || '').toLowerCase().includes(q);
-    const matchesType = filterType === 'all' || item.projectType === filterType;
+      (item.month || '').toLowerCase().includes(q) ||
+      (item.tagline || '').toLowerCase().includes(q);
+    const matchesCategory =
+      filterCategory === 'all' || item.projectCategory === filterCategory;
     const matchesStatus =
       filterStatus === 'all' ||
       (filterStatus === 'active' && item.isActive) ||
       (filterStatus === 'inactive' && !item.isActive);
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
   const stats = [
-    { label: 'Locations', value: items.length, hint: 'All projects' },
+    { label: 'Updates', value: items.length, hint: 'All site updates' },
     {
       label: 'Residential',
-      value: items.filter((b) => b.projectType === 'Residential').length,
+      value: items.filter((b) => b.projectCategory === 'Residential').length,
       hint: 'Homes',
     },
     {
       label: 'Commercial',
-      value: items.filter((b) => b.projectType === 'Commercial').length,
+      value: items.filter((b) => b.projectCategory === 'Commercial').length,
       hint: 'Offices',
     },
     { label: 'Showing', value: filtered.length, hint: 'Current filters' },
@@ -212,7 +240,7 @@ const ProjectLocationManagement = () => {
       <PageShell>
         <div className="cms-card p-16 flex flex-col items-center justify-center">
           <CircularProgress sx={{ color: '#C5A880' }} />
-          <p className="mt-4 text-[#5B584C] text-sm">Loading project locations...</p>
+          <p className="mt-4 text-[#5B584C] text-sm">Loading site updates...</p>
         </div>
       </PageShell>
     );
@@ -222,9 +250,9 @@ const ProjectLocationManagement = () => {
     <PageShell>
       <div className="space-y-5 sm:space-y-6">
         <PageHero
-          kicker="Maps"
-          title="Project location"
-          subtitle="Manage project locations and map links for the public site."
+          kicker="Construction"
+          title="Site updates"
+          subtitle="Monthly site progress updates and on-ground project photos."
         >
           <button type="button" onClick={fetchItems} className="cms-btn-outline">
             <RefreshIcon className="w-4 h-4" />
@@ -232,7 +260,7 @@ const ProjectLocationManagement = () => {
           </button>
           <button type="button" onClick={() => openModal()} className="cms-btn-primary">
             <FaPlus className="w-3.5 h-3.5" />
-            Add location
+            Add update
           </button>
         </PageHero>
 
@@ -244,21 +272,21 @@ const ProjectLocationManagement = () => {
               <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search locations..."
+                placeholder="Search updates..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="cms-input pl-10"
               />
             </div>
             <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
               className="cms-input cursor-pointer"
             >
-              <option value="all">All types</option>
-              {PROJECT_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
+              <option value="all">All categories</option>
+              {PROJECT_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
                 </option>
               ))}
             </select>
@@ -282,17 +310,17 @@ const ProjectLocationManagement = () => {
 
         {filtered.length === 0 ? (
           <EmptyState
-            icon={PlaceIcon}
-            title="No project locations yet"
+            icon={ConstructionIcon}
+            title="No site updates yet"
             message={
-              searchTerm || filterType !== 'all' || filterStatus !== 'all'
+              searchTerm || filterCategory !== 'all' || filterStatus !== 'all'
                 ? 'Nothing matches these filters.'
-                : 'Add the first project location.'
+                : 'Add the first site progress update.'
             }
             action={
               <button type="button" onClick={() => openModal()} className="cms-btn-primary">
                 <FaPlus className="w-3.5 h-3.5" />
-                Add location
+                Add update
               </button>
             }
           />
@@ -304,31 +332,41 @@ const ProjectLocationManagement = () => {
                 className="cms-card p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4"
               >
                 <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <div className="w-14 h-14 rounded-xl bg-[#f5f3ef] border border-[#C5A880]/20 overflow-hidden flex items-center justify-center flex-shrink-0">
-                    {item.projectImage ? (
+                  <div className="w-16 h-16 rounded-xl bg-[#f5f3ef] border border-[#C5A880]/20 overflow-hidden flex items-center justify-center flex-shrink-0">
+                    {item.images?.[0] ? (
                       <img
-                        src={formatUrl(item.projectImage)}
-                        alt={item.projectName}
+                        src={formatUrl(item.images[0])}
+                        alt={item.title}
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <span className="text-[#C5A880]">
-                        <FaMapMarkerAlt />
+                        <FaHardHat />
                       </span>
                     )}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-[#191f26] truncate">{item.projectName}</h3>
+                    <h3 className="font-semibold text-[#191f26] truncate">{item.title}</h3>
+                    <p className="text-sm text-[#5B584C]">
+                      {item.projectName}
+                      {item.month ? ` · ${item.month}` : ''}
+                    </p>
                     {item.tagline && (
-                      <p className="text-sm text-[#5B584C] line-clamp-1 italic">{item.tagline}</p>
+                      <p className="text-sm text-[#5B584C] line-clamp-1 italic mt-0.5">
+                        {item.tagline}
+                      </p>
                     )}
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className="text-[11px] px-2.5 py-1 rounded-full bg-[#C5A880]/15 text-[#A0725B]">
-                        {item.projectType}
+                        {item.projectCategory}
                       </span>
                       {item.location && (
                         <span className="text-[11px] text-gray-500">{item.location}</span>
                       )}
+                      <span className="text-[11px] text-gray-500">
+                        {(item.images || []).length} image
+                        {(item.images || []).length === 1 ? '' : 's'}
+                      </span>
                       <button
                         type="button"
                         onClick={() => handleToggle(item)}
@@ -344,14 +382,14 @@ const ProjectLocationManagement = () => {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {item.locationUrl && (
+                  {item.projectLink && (
                     <a
-                      href={item.locationUrl}
+                      href={item.projectLink}
                       target="_blank"
                       rel="noreferrer"
                       className="cms-btn-outline !px-4"
                     >
-                      <FaExternalLinkAlt className="inline mr-1" /> Map
+                      <FaExternalLinkAlt className="inline mr-1" /> Project
                     </a>
                   )}
                   <button
@@ -380,10 +418,10 @@ const ProjectLocationManagement = () => {
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="bg-[#191f26] px-6 py-5 text-white sticky top-0 z-10">
               <p className="text-[#C5A880] text-xs font-semibold tracking-[0.2em] uppercase">
-                Project location
+                Site updates
               </p>
               <h2 className="font-display text-2xl mt-1">
-                {editing ? 'Edit location' : 'Add location'}
+                {editing ? 'Edit update' : 'Add update'}
               </h2>
             </div>
 
@@ -397,53 +435,57 @@ const ProjectLocationManagement = () => {
                   value={formData.projectName}
                   onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
                   className="cms-input"
-                  placeholder="e.g. ACE Residences"
+                  placeholder="e.g. ACE Abode / ACE Villas"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
-                  Project type
-                </label>
-                <select
-                  value={formData.projectType}
-                  onChange={(e) => setFormData({ ...formData, projectType: e.target.value })}
-                  className="cms-input cursor-pointer"
-                  required
-                >
-                  {PROJECT_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
-                  Project image
+                  Update title
                 </label>
                 <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="cms-input"
+                  placeholder="e.g. ACE ABODE - MAY"
+                  required
                 />
-                <p className="text-xs text-[#5B584C] mt-1">
-                  JPG, PNG, WebP · Max 25MB
-                  {editing?.projectImage && !imageFile ? ' · Leave empty to keep current image' : ''}
-                </p>
-                {imagePreview && (
-                  <div className="mt-2 h-28 rounded-xl overflow-hidden bg-[#f5f3ef] border border-[#C5A880]/25 flex items-center justify-center">
-                    <img
-                      src={imagePreview}
-                      alt="Project preview"
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  </div>
-                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
+                    Update month
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.month}
+                    onChange={(e) => setFormData({ ...formData, month: e.target.value })}
+                    className="cms-input"
+                    placeholder="e.g. MAY 2024"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
+                    Category
+                  </label>
+                  <select
+                    value={formData.projectCategory}
+                    onChange={(e) =>
+                      setFormData({ ...formData, projectCategory: e.target.value })
+                    }
+                    className="cms-input cursor-pointer"
+                    required
+                  >
+                    {PROJECT_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -455,33 +497,107 @@ const ProjectLocationManagement = () => {
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   className="cms-input"
-                  placeholder="e.g. Baner, Pune"
+                  placeholder="e.g. Ravet, PCMC, Pune"
                 />
               </div>
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
-                  Tagline
+                  Tagline / Progress note
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={formData.tagline}
                   onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
                   className="cms-input"
-                  placeholder="Short project line"
+                  rows={2}
+                  placeholder="e.g. Elevated Urban Living & Architectural Finesse"
                 />
               </div>
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
-                  Location URL
+                  Project detail link
                 </label>
                 <input
-                  type="url"
-                  value={formData.locationUrl}
-                  onChange={(e) => setFormData({ ...formData, locationUrl: e.target.value })}
+                  type="text"
+                  value={formData.projectLink}
+                  onChange={(e) => setFormData({ ...formData, projectLink: e.target.value })}
                   className="cms-input"
-                  placeholder="https://maps.google.com/..."
+                  placeholder="e.g. /ace-villas"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
+                  Site images
+                </label>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImagesChange}
+                  className="cms-input"
+                />
+                <p className="text-xs text-[#5B584C] mt-1">
+                  Multiple JPG, PNG, WebP · Max 25MB each
+                </p>
+
+                {(existingImages.length > 0 || newImagePreviews.length > 0) && (
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {existingImages.map((url, index) => (
+                      <div
+                        key={`existing-${url}-${index}`}
+                        className="relative aspect-square rounded-lg overflow-hidden bg-[#f5f3ef] border border-[#C5A880]/25"
+                      >
+                        <img
+                          src={formatUrl(url)}
+                          alt={`Site ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeExistingImage(index)}
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 text-white flex items-center justify-center"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {newImagePreviews.map((preview, index) => (
+                      <div
+                        key={`new-${index}`}
+                        className="relative aspect-square rounded-lg overflow-hidden bg-[#f5f3ef] border border-[#C5A880]/25"
+                      >
+                        <img
+                          src={preview}
+                          alt={`New ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeNewImage(index)}
+                          className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 text-white flex items-center justify-center"
+                        >
+                          <FaTimes className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
+                  Display order
+                </label>
+                <input
+                  type="number"
+                  value={formData.order}
+                  onChange={(e) =>
+                    setFormData({ ...formData, order: Number(e.target.value) || 0 })
+                  }
+                  className="cms-input"
                 />
               </div>
 
@@ -503,7 +619,7 @@ const ProjectLocationManagement = () => {
                   disabled={saving}
                   className="cms-btn-primary disabled:opacity-50"
                 >
-                  {saving ? 'Saving...' : editing ? 'Update location' : 'Save location'}
+                  {saving ? 'Saving...' : editing ? 'Update' : 'Save update'}
                 </button>
               </div>
             </form>
@@ -514,4 +630,4 @@ const ProjectLocationManagement = () => {
   );
 };
 
-export default ProjectLocationManagement;
+export default SiteUpdateManagement;

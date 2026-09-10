@@ -70,6 +70,16 @@ import BrochureManagement from "./BrochureManagement/BrochureManagement";
 
 import ProjectLocationManagement from "./ProjectLocationManagement/ProjectLocationManagement";
 
+import MahareraManagement from "./MahareraManagement/MahareraManagement";
+
+import MediaPublicationManagement from "./MediaPublicationManagement/MediaPublicationManagement";
+
+import SiteUpdateManagement from "./SiteUpdateManagement/SiteUpdateManagement";
+
+import NewsletterManagement from "./NewsletterManagement/NewsletterManagement";
+
+import CareerManagement from "./CareerManagement/CareerManagement";
+
 import { useAdminAuth } from "./context/AdminAuthContext";
 
 import logo from "./assets/jhamtani-logo.webp";
@@ -207,6 +217,16 @@ function AppWrapper() {
           <Route path="/brochure" element={<ProtectedRoute><BrochureManagement /></ProtectedRoute>} />
 
           <Route path="/project-location" element={<ProtectedRoute><ProjectLocationManagement /></ProtectedRoute>} />
+
+          <Route path="/maharera" element={<ProtectedRoute><MahareraManagement /></ProtectedRoute>} />
+
+          <Route path="/media-publication" element={<ProtectedRoute><MediaPublicationManagement /></ProtectedRoute>} />
+
+          <Route path="/site-updates" element={<ProtectedRoute><SiteUpdateManagement /></ProtectedRoute>} />
+
+          <Route path="/monthly-newsletter" element={<ProtectedRoute><NewsletterManagement /></ProtectedRoute>} />
+
+          <Route path="/career" element={<ProtectedRoute><CareerManagement /></ProtectedRoute>} />
 
           <Route path="/leads-management" element={<ProtectedRoute><LeadsManagement /></ProtectedRoute>} />
 

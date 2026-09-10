@@ -22,7 +22,12 @@ import {
   FaBuilding,
   FaFileAlt,
   FaKey,
-  FaMapMarkerAlt
+  FaMapMarkerAlt,
+  FaShieldAlt,
+  FaNewspaper,
+  FaHardHat,
+  FaEnvelopeOpenText,
+  FaBriefcase
 } from 'react-icons/fa';
 import logo2 from '../assets/jhamtani-logo.webp'
 import { changePassword } from '../api/authApi';
@@ -255,6 +260,36 @@ const Sidebar = () => {
       path: '/project-location', 
       icon: <FaMapMarkerAlt className="text-white" />, 
       label: 'Project Location',
+      color: 'from-[#C5A880] to-[#A0725B]'
+    },
+    { 
+      path: '/maharera', 
+      icon: <FaShieldAlt className="text-white" />, 
+      label: 'Maharera Management',
+      color: 'from-[#C5A880] to-[#A0725B]'
+    },
+    { 
+      path: '/media-publication', 
+      icon: <FaNewspaper className="text-white" />, 
+      label: 'Media Publication',
+      color: 'from-[#C5A880] to-[#A0725B]'
+    },
+    { 
+      path: '/site-updates', 
+      icon: <FaHardHat className="text-white" />, 
+      label: 'Site Updates',
+      color: 'from-[#C5A880] to-[#A0725B]'
+    },
+    { 
+      path: '/monthly-newsletter', 
+      icon: <FaEnvelopeOpenText className="text-white" />, 
+      label: 'Monthly Newsletter',
+      color: 'from-[#C5A880] to-[#A0725B]'
+    },
+    { 
+      path: '/career', 
+      icon: <FaBriefcase className="text-white" />, 
+      label: 'Career',
       color: 'from-[#C5A880] to-[#A0725B]'
     },
     // { 

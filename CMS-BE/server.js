@@ -30,6 +30,11 @@ app.use('/api/happy-clients', require('./routes/happyClientRoutes'));
 app.use('/api/awards', require('./routes/awardRoutes'));
 app.use('/api/brochures', require('./routes/brochureRoutes'));
 app.use('/api/project-locations', require('./routes/projectLocationRoutes'));
+app.use('/api/mahareras', require('./routes/mahareraRoutes'));
+app.use('/api/media-publications', require('./routes/mediaPublicationRoutes'));
+app.use('/api/site-updates', require('./routes/siteUpdateRoutes'));
+app.use('/api/newsletters', require('./routes/newsletterRoutes'));
+app.use('/api/careers', require('./routes/careerRoutes'));
 app.use('/api/banners', require('./routes/bannerRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 

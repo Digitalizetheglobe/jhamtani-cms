@@ -1,30 +1,31 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaMapMarkerAlt, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaExternalLinkAlt, FaNewspaper } from 'react-icons/fa';
 import CircularProgress from '@mui/material/CircularProgress';
-import PlaceIcon from '@mui/icons-material/Place';
+import ArticleIcon from '@mui/icons-material/Article';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
 
 const API_BASE = 'http://localhost:5000';
-const PROJECT_TYPES = ['Residential', 'Commercial', 'Studio'];
 
 const emptyForm = {
-  projectName: '',
-  projectType: 'Residential',
-  location: '',
-  tagline: '',
-  locationUrl: '',
+  publisher: '',
+  category: '',
+  date: '',
+  readTime: '',
+  title: '',
+  excerpt: '',
+  articleUrl: '',
+  order: 0,
   isActive: true,
 };
 
-const ProjectLocationManagement = () => {
+const MediaPublicationManagement = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -45,15 +46,15 @@ const ProjectLocationManagement = () => {
     setLoading(true);
     setError('');
     try {
-      let response = await fetch('/api/project-locations?limit=100');
+      let response = await fetch('/api/media-publications?limit=100');
       if (!response.ok) {
-        response = await fetch(`${API_BASE}/api/project-locations?limit=100`);
+        response = await fetch(`${API_BASE}/api/media-publications?limit=100`);
       }
-      if (!response.ok) throw new Error('Failed to load project locations');
+      if (!response.ok) throw new Error('Failed to load media publications');
       const data = await response.json();
-      setItems(data.locations || []);
+      setItems(data.mediaArticles || []);
     } catch (err) {
-      setError(err.message || 'Failed to load project locations');
+      setError(err.message || 'Failed to load media publications');
       setItems([]);
     } finally {
       setLoading(false);
@@ -76,17 +77,21 @@ const ProjectLocationManagement = () => {
     if (item) {
       setEditing(item);
       setFormData({
-        projectName: item.projectName || '',
-        projectType: item.projectType || 'Residential',
-        location: item.location || '',
-        tagline: item.tagline || '',
-        locationUrl: item.locationUrl || '',
+        publisher: item.publisher || '',
+        category: item.category || '',
+        date: item.date || '',
+        readTime: item.readTime || '',
+        title: item.title || '',
+        excerpt: item.excerpt || '',
+        articleUrl: item.articleUrl || '',
+        order: item.order ?? 0,
         isActive: item.isActive !== false,
       });
-      setImagePreview(formatUrl(item.projectImage));
+      setImagePreview(formatUrl(item.image));
       setImageFile(null);
     } else {
       resetForm();
+      setFormData((prev) => ({ ...prev, order: items.length }));
     }
     setShowModal(true);
   };
@@ -107,8 +112,8 @@ const ProjectLocationManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.projectName.trim()) {
-      setError('Project name is required');
+    if (!formData.publisher.trim() || !formData.title.trim()) {
+      setError('Publisher and title are required');
       return;
     }
 
@@ -116,52 +121,54 @@ const ProjectLocationManagement = () => {
     setError('');
     try {
       const body = new FormData();
-      body.append('projectName', formData.projectName.trim());
-      body.append('projectType', formData.projectType);
-      body.append('location', formData.location.trim());
-      body.append('tagline', formData.tagline.trim());
-      body.append('locationUrl', formData.locationUrl.trim());
+      body.append('publisher', formData.publisher.trim());
+      body.append('category', formData.category.trim());
+      body.append('date', formData.date.trim());
+      body.append('readTime', formData.readTime.trim());
+      body.append('title', formData.title.trim());
+      body.append('excerpt', formData.excerpt.trim());
+      body.append('articleUrl', formData.articleUrl.trim());
+      body.append('order', formData.order);
       body.append('isActive', formData.isActive);
-      if (imageFile) body.append('projectImage', imageFile);
+      if (imageFile) body.append('image', imageFile);
 
       const url = editing
-        ? `${API_BASE}/api/project-locations/${editing._id}`
-        : `${API_BASE}/api/project-locations`;
+        ? `${API_BASE}/api/media-publications/${editing._id}`
+        : `${API_BASE}/api/media-publications`;
       const method = editing ? 'PUT' : 'POST';
 
       const response = await fetch(url, { method, body });
-
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to save project location');
+        throw new Error(data.message || 'Failed to save media publication');
       }
 
       closeModal();
       await fetchItems();
     } catch (err) {
-      setError(err.message || 'Failed to save project location');
+      setError(err.message || 'Failed to save media publication');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (item) => {
-    if (!window.confirm(`Delete location for "${item.projectName}"?`)) return;
+    if (!window.confirm(`Delete article "${item.title}"?`)) return;
     try {
-      const response = await fetch(`${API_BASE}/api/project-locations/${item._id}`, {
+      const response = await fetch(`${API_BASE}/api/media-publications/${item._id}`, {
         method: 'DELETE',
       });
-      if (!response.ok) throw new Error('Failed to delete project location');
+      if (!response.ok) throw new Error('Failed to delete media publication');
       setItems((prev) => prev.filter((row) => row._id !== item._id));
     } catch (err) {
-      setError(err.message || 'Failed to delete project location');
+      setError(err.message || 'Failed to delete media publication');
     }
   };
 
   const handleToggle = async (item) => {
     try {
       const response = await fetch(
-        `${API_BASE}/api/project-locations/${item._id}/toggle-status`,
+        `${API_BASE}/api/media-publications/${item._id}/toggle-status`,
         { method: 'PATCH' }
       );
       if (!response.ok) throw new Error('Failed to update status');
@@ -180,30 +187,21 @@ const ProjectLocationManagement = () => {
     const q = searchTerm.toLowerCase();
     const matchesSearch =
       !q ||
-      (item.projectName || '').toLowerCase().includes(q) ||
-      (item.location || '').toLowerCase().includes(q) ||
-      (item.tagline || '').toLowerCase().includes(q) ||
-      (item.projectType || '').toLowerCase().includes(q);
-    const matchesType = filterType === 'all' || item.projectType === filterType;
+      (item.title || '').toLowerCase().includes(q) ||
+      (item.publisher || '').toLowerCase().includes(q) ||
+      (item.category || '').toLowerCase().includes(q) ||
+      (item.excerpt || '').toLowerCase().includes(q);
     const matchesStatus =
       filterStatus === 'all' ||
       (filterStatus === 'active' && item.isActive) ||
       (filterStatus === 'inactive' && !item.isActive);
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesStatus;
   });
 
   const stats = [
-    { label: 'Locations', value: items.length, hint: 'All projects' },
-    {
-      label: 'Residential',
-      value: items.filter((b) => b.projectType === 'Residential').length,
-      hint: 'Homes',
-    },
-    {
-      label: 'Commercial',
-      value: items.filter((b) => b.projectType === 'Commercial').length,
-      hint: 'Offices',
-    },
+    { label: 'Articles', value: items.length, hint: 'All media' },
+    { label: 'Active', value: items.filter((b) => b.isActive).length, hint: 'Visible' },
+    { label: 'Hidden', value: items.filter((b) => !b.isActive).length, hint: 'Inactive' },
     { label: 'Showing', value: filtered.length, hint: 'Current filters' },
   ];
 
@@ -212,7 +210,7 @@ const ProjectLocationManagement = () => {
       <PageShell>
         <div className="cms-card p-16 flex flex-col items-center justify-center">
           <CircularProgress sx={{ color: '#C5A880' }} />
-          <p className="mt-4 text-[#5B584C] text-sm">Loading project locations...</p>
+          <p className="mt-4 text-[#5B584C] text-sm">Loading media publications...</p>
         </div>
       </PageShell>
     );
@@ -222,9 +220,9 @@ const ProjectLocationManagement = () => {
     <PageShell>
       <div className="space-y-5 sm:space-y-6">
         <PageHero
-          kicker="Maps"
-          title="Project location"
-          subtitle="Manage project locations and map links for the public site."
+          kicker="Press"
+          title="Media publication"
+          subtitle="Manage featured articles and press coverage for the public site."
         >
           <button type="button" onClick={fetchItems} className="cms-btn-outline">
             <RefreshIcon className="w-4 h-4" />
@@ -232,36 +230,24 @@ const ProjectLocationManagement = () => {
           </button>
           <button type="button" onClick={() => openModal()} className="cms-btn-primary">
             <FaPlus className="w-3.5 h-3.5" />
-            Add location
+            Add article
           </button>
         </PageHero>
 
         <StatCards items={stats} />
 
         <div className="cms-card p-4 sm:p-5">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="relative">
               <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search locations..."
+                placeholder="Search by title, publisher, category..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="cms-input pl-10"
               />
             </div>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="cms-input cursor-pointer"
-            >
-              <option value="all">All types</option>
-              {PROJECT_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -282,17 +268,17 @@ const ProjectLocationManagement = () => {
 
         {filtered.length === 0 ? (
           <EmptyState
-            icon={PlaceIcon}
-            title="No project locations yet"
+            icon={ArticleIcon}
+            title="No media articles yet"
             message={
-              searchTerm || filterType !== 'all' || filterStatus !== 'all'
+              searchTerm || filterStatus !== 'all'
                 ? 'Nothing matches these filters.'
-                : 'Add the first project location.'
+                : 'Add the first media publication.'
             }
             action={
               <button type="button" onClick={() => openModal()} className="cms-btn-primary">
                 <FaPlus className="w-3.5 h-3.5" />
-                Add location
+                Add article
               </button>
             }
           />
@@ -304,30 +290,34 @@ const ProjectLocationManagement = () => {
                 className="cms-card p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4"
               >
                 <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <div className="w-14 h-14 rounded-xl bg-[#f5f3ef] border border-[#C5A880]/20 overflow-hidden flex items-center justify-center flex-shrink-0">
-                    {item.projectImage ? (
+                  <div className="w-16 h-16 rounded-xl bg-[#f5f3ef] border border-[#C5A880]/20 overflow-hidden flex items-center justify-center flex-shrink-0">
+                    {item.image ? (
                       <img
-                        src={formatUrl(item.projectImage)}
-                        alt={item.projectName}
+                        src={formatUrl(item.image)}
+                        alt={item.title}
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <span className="text-[#C5A880]">
-                        <FaMapMarkerAlt />
+                        <FaNewspaper />
                       </span>
                     )}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-[#191f26] truncate">{item.projectName}</h3>
-                    {item.tagline && (
-                      <p className="text-sm text-[#5B584C] line-clamp-1 italic">{item.tagline}</p>
+                    <h3 className="font-semibold text-[#191f26] line-clamp-2">{item.title}</h3>
+                    <p className="text-sm text-[#5B584C] mt-0.5">
+                      {item.publisher}
+                      {item.category ? ` · ${item.category}` : ''}
+                    </p>
+                    {item.excerpt && (
+                      <p className="text-sm text-[#5B584C] line-clamp-2 mt-1">{item.excerpt}</p>
                     )}
                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span className="text-[11px] px-2.5 py-1 rounded-full bg-[#C5A880]/15 text-[#A0725B]">
-                        {item.projectType}
-                      </span>
-                      {item.location && (
-                        <span className="text-[11px] text-gray-500">{item.location}</span>
+                      {item.date && (
+                        <span className="text-[11px] text-gray-500">{item.date}</span>
+                      )}
+                      {item.readTime && (
+                        <span className="text-[11px] text-gray-500">{item.readTime}</span>
                       )}
                       <button
                         type="button"
@@ -344,14 +334,14 @@ const ProjectLocationManagement = () => {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {item.locationUrl && (
+                  {item.articleUrl && (
                     <a
-                      href={item.locationUrl}
+                      href={item.articleUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="cms-btn-outline !px-4"
                     >
-                      <FaExternalLinkAlt className="inline mr-1" /> Map
+                      <FaExternalLinkAlt className="inline mr-1" /> Article
                     </a>
                   )}
                   <button
@@ -380,49 +370,97 @@ const ProjectLocationManagement = () => {
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="bg-[#191f26] px-6 py-5 text-white sticky top-0 z-10">
               <p className="text-[#C5A880] text-xs font-semibold tracking-[0.2em] uppercase">
-                Project location
+                Media publication
               </p>
               <h2 className="font-display text-2xl mt-1">
-                {editing ? 'Edit location' : 'Add location'}
+                {editing ? 'Edit article' : 'Add article'}
               </h2>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
                 <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
-                  Project name
+                  Publisher
                 </label>
                 <input
                   type="text"
-                  value={formData.projectName}
-                  onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
+                  value={formData.publisher}
+                  onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
                   className="cms-input"
-                  placeholder="e.g. ACE Residences"
+                  placeholder="e.g. BW Businessworld"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
-                  Project type
+                  Category
                 </label>
-                <select
-                  value={formData.projectType}
-                  onChange={(e) => setFormData({ ...formData, projectType: e.target.value })}
-                  className="cms-input cursor-pointer"
-                  required
-                >
-                  {PROJECT_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="cms-input"
+                  placeholder="e.g. Featured Article"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
+                    Date
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    className="cms-input"
+                    placeholder="e.g. May 2024"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
+                    Read time
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.readTime}
+                    onChange={(e) => setFormData({ ...formData, readTime: e.target.value })}
+                    className="cms-input"
+                    placeholder="e.g. 4 min read"
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
-                  Project image
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="cms-input"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
+                  Excerpt
+                </label>
+                <textarea
+                  value={formData.excerpt}
+                  onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                  className="cms-input"
+                  rows={3}
+                  placeholder="Short article summary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
+                  Image
                 </label>
                 <input
                   ref={imageInputRef}
@@ -433,13 +471,13 @@ const ProjectLocationManagement = () => {
                 />
                 <p className="text-xs text-[#5B584C] mt-1">
                   JPG, PNG, WebP · Max 25MB
-                  {editing?.projectImage && !imageFile ? ' · Leave empty to keep current image' : ''}
+                  {editing?.image && !imageFile ? ' · Leave empty to keep current image' : ''}
                 </p>
                 {imagePreview && (
                   <div className="mt-2 h-28 rounded-xl overflow-hidden bg-[#f5f3ef] border border-[#C5A880]/25 flex items-center justify-center">
                     <img
                       src={imagePreview}
-                      alt="Project preview"
+                      alt="Article preview"
                       className="max-h-full max-w-full object-contain"
                     />
                   </div>
@@ -448,40 +486,28 @@ const ProjectLocationManagement = () => {
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  className="cms-input"
-                  placeholder="e.g. Baner, Pune"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
-                  Tagline
-                </label>
-                <input
-                  type="text"
-                  value={formData.tagline}
-                  onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
-                  className="cms-input"
-                  placeholder="Short project line"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
-                  Location URL
+                  Article URL
                 </label>
                 <input
                   type="url"
-                  value={formData.locationUrl}
-                  onChange={(e) => setFormData({ ...formData, locationUrl: e.target.value })}
+                  value={formData.articleUrl}
+                  onChange={(e) => setFormData({ ...formData, articleUrl: e.target.value })}
                   className="cms-input"
-                  placeholder="https://maps.google.com/..."
+                  placeholder="https://..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
+                  Display order
+                </label>
+                <input
+                  type="number"
+                  value={formData.order}
+                  onChange={(e) =>
+                    setFormData({ ...formData, order: Number(e.target.value) || 0 })
+                  }
+                  className="cms-input"
                 />
               </div>
 
@@ -503,7 +529,7 @@ const ProjectLocationManagement = () => {
                   disabled={saving}
                   className="cms-btn-primary disabled:opacity-50"
                 >
-                  {saving ? 'Saving...' : editing ? 'Update location' : 'Save location'}
+                  {saving ? 'Saving...' : editing ? 'Update article' : 'Save article'}
                 </button>
               </div>
             </form>
@@ -514,4 +540,4 @@ const ProjectLocationManagement = () => {
   );
 };
 
-export default ProjectLocationManagement;
+export default MediaPublicationManagement;

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaMapMarkerAlt, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaFilePdf, FaShieldAlt } from 'react-icons/fa';
 import CircularProgress from '@mui/material/CircularProgress';
-import PlaceIcon from '@mui/icons-material/Place';
+import GavelIcon from '@mui/icons-material/Gavel';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
@@ -12,13 +12,13 @@ const PROJECT_TYPES = ['Residential', 'Commercial', 'Studio'];
 const emptyForm = {
   projectName: '',
   projectType: 'Residential',
-  location: '',
+  projectLocation: '',
   tagline: '',
-  locationUrl: '',
+  mahareraNo: '',
   isActive: true,
 };
 
-const ProjectLocationManagement = () => {
+const MahareraManagement = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -29,8 +29,10 @@ const ProjectLocationManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
+  const [documentFile, setDocumentFile] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const documentInputRef = useRef(null);
   const imageInputRef = useRef(null);
 
   const formatUrl = (url) => {
@@ -45,15 +47,15 @@ const ProjectLocationManagement = () => {
     setLoading(true);
     setError('');
     try {
-      let response = await fetch('/api/project-locations?limit=100');
+      let response = await fetch('/api/mahareras?limit=100');
       if (!response.ok) {
-        response = await fetch(`${API_BASE}/api/project-locations?limit=100`);
+        response = await fetch(`${API_BASE}/api/mahareras?limit=100`);
       }
-      if (!response.ok) throw new Error('Failed to load project locations');
+      if (!response.ok) throw new Error('Failed to load Maharera records');
       const data = await response.json();
-      setItems(data.locations || []);
+      setItems(data.mahareras || []);
     } catch (err) {
-      setError(err.message || 'Failed to load project locations');
+      setError(err.message || 'Failed to load Maharera records');
       setItems([]);
     } finally {
       setLoading(false);
@@ -67,8 +69,10 @@ const ProjectLocationManagement = () => {
   const resetForm = () => {
     setFormData(emptyForm);
     setEditing(null);
+    setDocumentFile(null);
     setImageFile(null);
     setImagePreview('');
+    if (documentInputRef.current) documentInputRef.current.value = '';
     if (imageInputRef.current) imageInputRef.current.value = '';
   };
 
@@ -78,13 +82,14 @@ const ProjectLocationManagement = () => {
       setFormData({
         projectName: item.projectName || '',
         projectType: item.projectType || 'Residential',
-        location: item.location || '',
+        projectLocation: item.projectLocation || '',
         tagline: item.tagline || '',
-        locationUrl: item.locationUrl || '',
+        mahareraNo: item.mahareraNo || '',
         isActive: item.isActive !== false,
       });
-      setImagePreview(formatUrl(item.projectImage));
+      setDocumentFile(null);
       setImageFile(null);
+      setImagePreview(formatUrl(item.projectImage));
     } else {
       resetForm();
     }
@@ -111,6 +116,10 @@ const ProjectLocationManagement = () => {
       setError('Project name is required');
       return;
     }
+    if (!editing && !documentFile) {
+      setError('Maharera document is required');
+      return;
+    }
 
     setSaving(true);
     setError('');
@@ -118,52 +127,51 @@ const ProjectLocationManagement = () => {
       const body = new FormData();
       body.append('projectName', formData.projectName.trim());
       body.append('projectType', formData.projectType);
-      body.append('location', formData.location.trim());
+      body.append('projectLocation', formData.projectLocation.trim());
       body.append('tagline', formData.tagline.trim());
-      body.append('locationUrl', formData.locationUrl.trim());
+      body.append('mahareraNo', formData.mahareraNo.trim());
       body.append('isActive', formData.isActive);
       if (imageFile) body.append('projectImage', imageFile);
+      if (documentFile) body.append('document', documentFile);
 
       const url = editing
-        ? `${API_BASE}/api/project-locations/${editing._id}`
-        : `${API_BASE}/api/project-locations`;
+        ? `${API_BASE}/api/mahareras/${editing._id}`
+        : `${API_BASE}/api/mahareras`;
       const method = editing ? 'PUT' : 'POST';
 
       const response = await fetch(url, { method, body });
-
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to save project location');
+        throw new Error(data.message || 'Failed to save Maharera record');
       }
 
       closeModal();
       await fetchItems();
     } catch (err) {
-      setError(err.message || 'Failed to save project location');
+      setError(err.message || 'Failed to save Maharera record');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (item) => {
-    if (!window.confirm(`Delete location for "${item.projectName}"?`)) return;
+    if (!window.confirm(`Delete Maharera record for "${item.projectName}"?`)) return;
     try {
-      const response = await fetch(`${API_BASE}/api/project-locations/${item._id}`, {
+      const response = await fetch(`${API_BASE}/api/mahareras/${item._id}`, {
         method: 'DELETE',
       });
-      if (!response.ok) throw new Error('Failed to delete project location');
+      if (!response.ok) throw new Error('Failed to delete Maharera record');
       setItems((prev) => prev.filter((row) => row._id !== item._id));
     } catch (err) {
-      setError(err.message || 'Failed to delete project location');
+      setError(err.message || 'Failed to delete Maharera record');
     }
   };
 
   const handleToggle = async (item) => {
     try {
-      const response = await fetch(
-        `${API_BASE}/api/project-locations/${item._id}/toggle-status`,
-        { method: 'PATCH' }
-      );
+      const response = await fetch(`${API_BASE}/api/mahareras/${item._id}/toggle-status`, {
+        method: 'PATCH',
+      });
       if (!response.ok) throw new Error('Failed to update status');
       const result = await response.json();
       setItems((prev) =>
@@ -181,8 +189,9 @@ const ProjectLocationManagement = () => {
     const matchesSearch =
       !q ||
       (item.projectName || '').toLowerCase().includes(q) ||
-      (item.location || '').toLowerCase().includes(q) ||
+      (item.projectLocation || '').toLowerCase().includes(q) ||
       (item.tagline || '').toLowerCase().includes(q) ||
+      (item.mahareraNo || '').toLowerCase().includes(q) ||
       (item.projectType || '').toLowerCase().includes(q);
     const matchesType = filterType === 'all' || item.projectType === filterType;
     const matchesStatus =
@@ -193,7 +202,7 @@ const ProjectLocationManagement = () => {
   });
 
   const stats = [
-    { label: 'Locations', value: items.length, hint: 'All projects' },
+    { label: 'Records', value: items.length, hint: 'All projects' },
     {
       label: 'Residential',
       value: items.filter((b) => b.projectType === 'Residential').length,
@@ -212,7 +221,7 @@ const ProjectLocationManagement = () => {
       <PageShell>
         <div className="cms-card p-16 flex flex-col items-center justify-center">
           <CircularProgress sx={{ color: '#C5A880' }} />
-          <p className="mt-4 text-[#5B584C] text-sm">Loading project locations...</p>
+          <p className="mt-4 text-[#5B584C] text-sm">Loading Maharera records...</p>
         </div>
       </PageShell>
     );
@@ -222,9 +231,9 @@ const ProjectLocationManagement = () => {
     <PageShell>
       <div className="space-y-5 sm:space-y-6">
         <PageHero
-          kicker="Maps"
-          title="Project location"
-          subtitle="Manage project locations and map links for the public site."
+          kicker="Compliance"
+          title="Maharera"
+          subtitle="Manage MahaRERA numbers and registration documents."
         >
           <button type="button" onClick={fetchItems} className="cms-btn-outline">
             <RefreshIcon className="w-4 h-4" />
@@ -232,7 +241,7 @@ const ProjectLocationManagement = () => {
           </button>
           <button type="button" onClick={() => openModal()} className="cms-btn-primary">
             <FaPlus className="w-3.5 h-3.5" />
-            Add location
+            Add Maharera
           </button>
         </PageHero>
 
@@ -244,7 +253,7 @@ const ProjectLocationManagement = () => {
               <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search locations..."
+                placeholder="Search by project, number, location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="cms-input pl-10"
@@ -282,17 +291,17 @@ const ProjectLocationManagement = () => {
 
         {filtered.length === 0 ? (
           <EmptyState
-            icon={PlaceIcon}
-            title="No project locations yet"
+            icon={GavelIcon}
+            title="No Maharera records yet"
             message={
               searchTerm || filterType !== 'all' || filterStatus !== 'all'
                 ? 'Nothing matches these filters.'
-                : 'Add the first project location.'
+                : 'Add the first Maharera registration.'
             }
             action={
               <button type="button" onClick={() => openModal()} className="cms-btn-primary">
                 <FaPlus className="w-3.5 h-3.5" />
-                Add location
+                Add Maharera
               </button>
             }
           />
@@ -313,7 +322,7 @@ const ProjectLocationManagement = () => {
                       />
                     ) : (
                       <span className="text-[#C5A880]">
-                        <FaMapMarkerAlt />
+                        <FaShieldAlt />
                       </span>
                     )}
                   </div>
@@ -322,12 +331,17 @@ const ProjectLocationManagement = () => {
                     {item.tagline && (
                       <p className="text-sm text-[#5B584C] line-clamp-1 italic">{item.tagline}</p>
                     )}
+                    {item.mahareraNo && (
+                      <p className="text-sm text-[#191f26] mt-1">
+                        No: <span className="font-medium">{item.mahareraNo}</span>
+                      </p>
+                    )}
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className="text-[11px] px-2.5 py-1 rounded-full bg-[#C5A880]/15 text-[#A0725B]">
                         {item.projectType}
                       </span>
-                      {item.location && (
-                        <span className="text-[11px] text-gray-500">{item.location}</span>
+                      {item.projectLocation && (
+                        <span className="text-[11px] text-gray-500">{item.projectLocation}</span>
                       )}
                       <button
                         type="button"
@@ -344,14 +358,14 @@ const ProjectLocationManagement = () => {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {item.locationUrl && (
+                  {item.mahareraDocument && (
                     <a
-                      href={item.locationUrl}
+                      href={formatUrl(item.mahareraDocument)}
                       target="_blank"
                       rel="noreferrer"
                       className="cms-btn-outline !px-4"
                     >
-                      <FaExternalLinkAlt className="inline mr-1" /> Map
+                      <FaFilePdf className="inline mr-1" /> Document
                     </a>
                   )}
                   <button
@@ -380,10 +394,10 @@ const ProjectLocationManagement = () => {
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="bg-[#191f26] px-6 py-5 text-white sticky top-0 z-10">
               <p className="text-[#C5A880] text-xs font-semibold tracking-[0.2em] uppercase">
-                Project location
+                Maharera
               </p>
               <h2 className="font-display text-2xl mt-1">
-                {editing ? 'Edit location' : 'Add location'}
+                {editing ? 'Edit Maharera' : 'Add Maharera'}
               </h2>
             </div>
 
@@ -448,12 +462,12 @@ const ProjectLocationManagement = () => {
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
-                  Location
+                  Project location
                 </label>
                 <input
                   type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  value={formData.projectLocation}
+                  onChange={(e) => setFormData({ ...formData, projectLocation: e.target.value })}
                   className="cms-input"
                   placeholder="e.g. Baner, Pune"
                 />
@@ -474,15 +488,48 @@ const ProjectLocationManagement = () => {
 
               <div>
                 <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
-                  Location URL
+                  Maharera no
                 </label>
                 <input
-                  type="url"
-                  value={formData.locationUrl}
-                  onChange={(e) => setFormData({ ...formData, locationUrl: e.target.value })}
+                  type="text"
+                  value={formData.mahareraNo}
+                  onChange={(e) => setFormData({ ...formData, mahareraNo: e.target.value })}
                   className="cms-input"
-                  placeholder="https://maps.google.com/..."
+                  placeholder="e.g. P52100012345"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-1.5">
+                  Maharera document
+                </label>
+                <input
+                  ref={documentInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,application/pdf"
+                  onChange={(e) => setDocumentFile(e.target.files?.[0] || null)}
+                  className="cms-input"
+                  required={!editing}
+                />
+                <p className="text-xs text-[#5B584C] mt-1">
+                  PDF or Word · Max 50MB
+                  {editing?.mahareraDocument && !documentFile
+                    ? ' · Leave empty to keep current file'
+                    : ''}
+                </p>
+                {documentFile && (
+                  <p className="text-xs text-[#A0725B] mt-1 truncate">{documentFile.name}</p>
+                )}
+                {!documentFile && editing?.mahareraDocument && (
+                  <a
+                    href={formatUrl(editing.mahareraDocument)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-[#A0725B] underline mt-1 inline-block"
+                  >
+                    View current document
+                  </a>
+                )}
               </div>
 
               <label className="flex items-center gap-2 text-sm text-[#5B584C]">
@@ -503,7 +550,7 @@ const ProjectLocationManagement = () => {
                   disabled={saving}
                   className="cms-btn-primary disabled:opacity-50"
                 >
-                  {saving ? 'Saving...' : editing ? 'Update location' : 'Save location'}
+                  {saving ? 'Saving...' : editing ? 'Update Maharera' : 'Save Maharera'}
                 </button>
               </div>
             </form>
@@ -514,4 +561,4 @@ const ProjectLocationManagement = () => {
   );
 };
 
-export default ProjectLocationManagement;
+export default MahareraManagement;
