@@ -35,6 +35,7 @@ app.use('/api/media-publications', require('./routes/mediaPublicationRoutes'));
 app.use('/api/site-updates', require('./routes/siteUpdateRoutes'));
 app.use('/api/newsletters', require('./routes/newsletterRoutes'));
 app.use('/api/careers', require('./routes/careerRoutes'));
+app.use('/api/career-jobs', require('./routes/careerJobRoutes'));
 app.use('/api/banners', require('./routes/bannerRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 

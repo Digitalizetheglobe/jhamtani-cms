@@ -5,6 +5,7 @@ require('./Banner');
 require('./Blog');
 require('./Brochure');
 require('./CareerApplication');
+require('./CareerJob');
 require('./DynamicForm');
 require('./EmailTemplate');
 require('./Event');

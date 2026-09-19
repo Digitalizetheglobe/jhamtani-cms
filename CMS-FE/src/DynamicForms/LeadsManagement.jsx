@@ -13,6 +13,147 @@ import InboxIcon from '@mui/icons-material/Inbox';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
 
+const normalizeFieldKey = (key) =>
+  String(key || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+// Map alias keys to one canonical group so "Name" + "Full Name" show once
+const FIELD_ALIASES = {
+  name: 'name',
+  fullname: 'name',
+  yourfullname: 'name',
+  applicantname: 'name',
+  email: 'email',
+  emailaddress: 'email',
+  mail: 'email',
+  phone: 'phone',
+  phonenumber: 'phone',
+  mobile: 'phone',
+  mobilenumber: 'phone',
+  whatsapp: 'phone',
+  tel: 'phone',
+  telephone: 'phone',
+  message: 'message',
+  messages: 'message',
+  comment: 'message',
+  comments: 'message',
+  note: 'message',
+  notes: 'message',
+  project: 'project',
+  projectofinterest: 'project',
+  projectinterest: 'project',
+  consent: 'consent',
+  agree: 'consent',
+  authorization: 'consent',
+};
+
+const PREFERRED_LABELS = {
+  name: 'Full Name',
+  email: 'Email Address',
+  phone: 'Phone Number',
+  message: 'Message',
+  project: 'Project of Interest',
+  consent: 'Consent',
+};
+
+const findFormField = (key, formFields = []) => {
+  const norm = normalizeFieldKey(key);
+  return formFields.find(
+    (f) =>
+      f.name === key ||
+      normalizeFieldKey(f.name) === norm ||
+      normalizeFieldKey(f.label) === norm
+  );
+};
+
+// Collapse short form keys (f/e/p/m) + aliases (fullName/Your Name) into one group
+const canonicalFieldKey = (key, formFields = []) => {
+  const norm = normalizeFieldKey(key);
+  if (!norm) return '';
+  if (FIELD_ALIASES[norm]) return FIELD_ALIASES[norm];
+
+  const field = findFormField(key, formFields);
+  if (field) {
+    const fromLabel = FIELD_ALIASES[normalizeFieldKey(field.label)];
+    if (fromLabel) return fromLabel;
+    const fromName = FIELD_ALIASES[normalizeFieldKey(field.name)];
+    if (fromName) return fromName;
+    return normalizeFieldKey(field.label) || normalizeFieldKey(field.name) || norm;
+  }
+
+  return norm;
+};
+
+const formatFieldLabel = (key, formFields = []) => {
+  const field = findFormField(key, formFields);
+  if (field?.label) return field.label;
+
+  const canon = canonicalFieldKey(key, formFields);
+  const byCanon = formFields.find(
+    (f) =>
+      canonicalFieldKey(f.name, formFields) === canon ||
+      canonicalFieldKey(f.label, formFields) === canon
+  );
+  if (byCanon?.label) return byCanon.label;
+  if (PREFERRED_LABELS[canon]) return PREFERRED_LABELS[canon];
+  return String(key)
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (l) => l.toUpperCase())
+    .trim();
+};
+
+const scoreFieldKey = (key, formFields = []) => {
+  const exactFormField = formFields.some((f) => f.name === key);
+  let score = 0;
+  // Prefer the form's real field names (f/e/p/m) over duplicate aliases
+  if (exactFormField) score += 200;
+  else if (findFormField(key, formFields)) score += 100;
+  if (/[ _]/.test(key)) score += 20;
+  const canon = canonicalFieldKey(key, formFields);
+  if (PREFERRED_LABELS[canon] && normalizeFieldKey(key) === normalizeFieldKey(PREFERRED_LABELS[canon])) {
+    score += 30;
+  }
+  // Prefer longer descriptive keys over short junk when neither matches form
+  if (!exactFormField) score += Math.min(String(key).length, 40);
+  return score;
+};
+
+const getDedupedLeadEntries = (data = {}, formFields = []) => {
+  const seen = new Map();
+  Object.entries(data).forEach(([key, value]) => {
+    if (value === undefined || value === null || String(value).trim() === '') return;
+    if (typeof value === 'object') return;
+    const canon = canonicalFieldKey(key, formFields);
+    if (!canon) return;
+
+    const candidate = {
+      key,
+      label: formatFieldLabel(key, formFields),
+      value,
+      score: scoreFieldKey(key, formFields),
+    };
+    const existing = seen.get(canon);
+    if (!existing || candidate.score > existing.score) {
+      seen.set(canon, candidate);
+    }
+  });
+  return Array.from(seen.values());
+};
+
+const getLeadFieldValue = (data = {}, fieldName, formFields = []) => {
+  if (!data || typeof data !== 'object') return '';
+  if (data[fieldName] !== undefined && data[fieldName] !== null && data[fieldName] !== '') {
+    return data[fieldName];
+  }
+  const canon = canonicalFieldKey(fieldName, formFields);
+  const hit = Object.entries(data).find(
+    ([k]) => canonicalFieldKey(k, formFields) === canon
+  );
+  return hit ? hit[1] : '';
+};
+
 const LeadsManagement = () => {
   const [leads, setLeads] = useState([]);
   const [forms, setForms] = useState([]);
@@ -82,13 +223,24 @@ const LeadsManagement = () => {
   }, []);
 
   const getAllFieldNames = () => {
-    const fieldNames = new Set();
+    const preferredByCanon = new Map();
     leads.forEach((lead) => {
-      if (lead.data) {
-        Object.keys(lead.data).forEach((key) => fieldNames.add(key));
-      }
+      if (!lead.data) return;
+      const formFields = lead.formFields || [];
+      Object.keys(lead.data).forEach((name) => {
+        if (typeof lead.data[name] === 'object' && lead.data[name] !== null) return;
+        const canon = canonicalFieldKey(name, formFields);
+        if (!canon) return;
+        const existing = preferredByCanon.get(canon);
+        if (
+          !existing ||
+          scoreFieldKey(name, formFields) > scoreFieldKey(existing, formFields)
+        ) {
+          preferredByCanon.set(canon, name);
+        }
+      });
     });
-    return Array.from(fieldNames);
+    return Array.from(preferredByCanon.values());
   };
 
   const getAllFormTitles = () => {
@@ -209,7 +361,7 @@ const LeadsManagement = () => {
       'Form ID',
       'Submission Date',
       'IP Address',
-      ...fieldNames.map((field) => field.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())),
+      ...fieldNames.map((field) => formatFieldLabel(field, filteredLeads[0]?.formFields || [])),
     ];
 
     const csvContent = [
@@ -224,7 +376,7 @@ const LeadsManagement = () => {
           `"${new Date(lead.createdAt).toLocaleString().replace(/"/g, '""')}"`,
           `"${(lead.ipAddress || 'N/A').replace(/"/g, '""')}"`,
           ...fieldNames.map((field) => {
-            const value = lead.data[field] || '';
+            const value = getLeadFieldValue(lead.data, field, lead.formFields || []) || '';
             return `"${String(value).replace(/"/g, '""')}"`;
           }),
         ];
@@ -466,17 +618,14 @@ const LeadsManagement = () => {
                 <div>
                   <p className="text-xs uppercase tracking-wider text-[#5B584C] font-semibold mb-3">Lead data</p>
                   <div className="space-y-3">
-                    {Object.entries(selectedLead.data).map(([key, value]) => {
-                      const field = selectedLead.formFields?.find((f) => f.name === key);
-                      const label =
-                        field?.label || key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-                      return (
+                    {getDedupedLeadEntries(selectedLead.data, selectedLead.formFields || []).map(
+                      ({ key, label, value }) => (
                         <div key={key} className="border-b border-[#C5A880]/20 pb-3">
                           <p className="text-xs text-[#5B584C]">{label}</p>
                           <p className="text-[#191f26] mt-0.5">{String(value) || '(Empty)'}</p>
                         </div>
-                      );
-                    })}
+                      )
+                    )}
                   </div>
                 </div>
               )}

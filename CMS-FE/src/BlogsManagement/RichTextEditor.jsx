@@ -11,7 +11,8 @@ import {
   FiLink,
   FiImage,
   FiCode,
-  FiMessageSquare
+  FiMessageSquare,
+  FiRotateCcw,
 } from 'react-icons/fi';
 
 const RichTextEditor = ({ value, onChange, placeholder = "Write your content here..." }) => {
@@ -71,25 +72,42 @@ const RichTextEditor = ({ value, onChange, placeholder = "Write your content her
     }
   };
 
+  const handleUndo = () => {
+    execCommand('undo');
+  };
+
   const handleKeyDown = (e) => {
-    // Prevent default behavior for formatting shortcuts to avoid conflicts
-    if (e.ctrlKey || e.metaKey) {
-      switch (e.key.toLowerCase()) {
-        case 'b':
-        case 'i':
-        case 'u':
-        case 'l':
-        case 'h':
-        case 'q':
-          e.preventDefault();
-          break;
-        default:
-          break;
-      }
+    if (!(e.ctrlKey || e.metaKey)) return;
+
+    switch (e.key.toLowerCase()) {
+      case 'z':
+        // Let the browser handle native undo/redo for contentEditable
+        break;
+      case 'b':
+        e.preventDefault();
+        execCommand('bold');
+        break;
+      case 'i':
+        e.preventDefault();
+        execCommand('italic');
+        break;
+      case 'u':
+        e.preventDefault();
+        execCommand('underline');
+        break;
+      default:
+        break;
     }
   };
 
   const toolbarButtons = [
+    {
+      icon: <FiRotateCcw />,
+      title: 'Undo',
+      action: handleUndo,
+      shortcut: 'Ctrl+Z'
+    },
+    { separator: true },
     {
       icon: <FiBold />,
       title: 'Bold',
@@ -180,7 +198,7 @@ const RichTextEditor = ({ value, onChange, placeholder = "Write your content her
               key={index}
               type="button"
               onClick={() => button.action ? button.action() : execCommand(button.command, button.value)}
-              title={`${button.title} (${button.shortcut})`}
+              title={button.shortcut ? `${button.title} (${button.shortcut})` : button.title}
               className="p-2 rounded hover:bg-gray-200 transition-colors text-gray-700 hover:text-gray-900"
             >
               {button.icon}
@@ -205,25 +223,12 @@ const RichTextEditor = ({ value, onChange, placeholder = "Write your content her
           fontFamily: 'inherit',
           fontSize: '14px',
           lineHeight: '1.6',
-          direction: 'ltr', // Ensure left-to-right text direction
-          textAlign: 'left' // Ensure left alignment
+          direction: 'ltr',
+          textAlign: 'left'
         }}
         data-placeholder={placeholder}
         suppressContentEditableWarning={true}
       />
-
-      {/* Formatting Tips */}
-      <div className="mt-2 text-xs text-gray-500">
-        <p><strong>Formatting Tips:</strong></p>
-        <ul className="list-disc list-inside space-y-1 mt-1">
-          <li><strong>Bold:</strong> Select text and click Bold button or use Ctrl+B</li>
-          <li><strong>Italic:</strong> Select text and click Italic button or use Ctrl+I</li>
-          <li><strong>Headings:</strong> Click Heading button to create section titles</li>
-          <li><strong>Lists:</strong> Click Bullet List button to create bullet points</li>
-          <li><strong>Links:</strong> Select text and click Link button to add URLs</li>
-          <li><strong>Images:</strong> Click Image button to insert images</li>
-        </ul>
-      </div>
     </div>
   );
 };
