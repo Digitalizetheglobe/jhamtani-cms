@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAppState, useUser } from "../hooks/Hooks";
+import { API_BASE_URL } from '../api/config';
 
 function User() {
   const { username } = useParams();
@@ -49,7 +50,7 @@ function User() {
     const token = JSON.parse(localStorage.getItem("user")).token;
     try {
       const res = await fetch(
-        `http://localhost:5000/api/v1/users/${username}/follow`,
+        `${API_BASE_URL}/api/v1/users/${username}/follow`,
         {
           method: "POST",
           headers: {
@@ -81,7 +82,7 @@ function User() {
     const token = JSON.parse(localStorage.getItem("user")).token;
     try {
       const res = await fetch(
-        `http://localhost:5000/api/v1/users/${username}/follow`,
+        `${API_BASE_URL}/api/v1/users/${username}/follow`,
         {
           method: "POST",
           headers: {

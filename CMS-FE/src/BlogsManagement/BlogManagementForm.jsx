@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FiUpload, FiCalendar, FiClock, FiTag, FiCheckCircle, FiXCircle } from 'react-icons/fi';
+import { API_BASE_URL } from '../api/config';
 
 const BlogManagementForm = () => {
   const [formData, setFormData] = useState({
@@ -100,7 +101,7 @@ const BlogManagementForm = () => {
     });
 
     try {
-      const response = await fetch('http://localhost:5000/api/blogs', {
+      const response = await fetch(`${API_BASE_URL}/api/blogs`, {
         method: 'POST',
         body: formDataToSend,
         // Don't set Content-Type header - let the browser set it with the correct boundary

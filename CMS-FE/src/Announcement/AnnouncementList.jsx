@@ -7,6 +7,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
+import { API_BASE_URL } from '../api/config';
 
 const AnnouncementList = () => {
   const [announcements, setAnnouncements] = useState([]);
@@ -27,7 +28,7 @@ const AnnouncementList = () => {
   const fetchAnnouncements = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get('http://localhost:5000/api/announcements', {
+      const response = await axios.get(`${API_BASE_URL}/api/announcements`, {
         params: {
           page: currentPage,
           limit: itemsPerPage,
@@ -78,7 +79,7 @@ const AnnouncementList = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this announcement?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/announcements/${id}`);
+        await axios.delete(`${API_BASE_URL}/api/announcements/${id}`);
         setAnnouncements(prev => prev.filter(ann => ann._id !== id));
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to delete announcement');

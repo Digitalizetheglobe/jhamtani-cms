@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 
 const AnnouncementForm = ({ announcement, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -79,13 +80,13 @@ const AnnouncementForm = ({ announcement, onSuccess, onCancel }) => {
 
       let response;
       if (announcement) {
-        response = await axios.put(`http://localhost:5000/api/announcements/${announcement._id}`, formDataToSend, {
+        response = await axios.put(`${API_BASE_URL}/api/announcements/${announcement._id}`, formDataToSend, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
         });
       } else {
-        response = await axios.post('http://localhost:5000/api/announcements', formDataToSend, {
+        response = await axios.post(`${API_BASE_URL}/api/announcements`, formDataToSend, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }

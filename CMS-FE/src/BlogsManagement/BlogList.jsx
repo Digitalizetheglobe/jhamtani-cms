@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import CircularProgress from '@mui/material/CircularProgress';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
+import { API_BASE_URL } from '../api/config';
 
 const BlogList = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const BlogList = () => {
   const fetchBlogs = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/blogs/');
+      const response = await fetch(`${API_BASE_URL}/api/blogs/`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -54,7 +55,7 @@ const BlogList = () => {
   const handleDelete = async (blogId) => {
     if (window.confirm('Are you sure you want to delete this blog?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/blogs/${blogId}`, {
+        const response = await fetch(`${API_BASE_URL}/api/blogs/${blogId}`, {
           method: 'DELETE',
         });
 

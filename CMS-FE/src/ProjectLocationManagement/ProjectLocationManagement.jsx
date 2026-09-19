@@ -5,8 +5,8 @@ import PlaceIcon from '@mui/icons-material/Place';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
+import { API_BASE_URL } from '../api/config';
 
-const API_BASE = 'http://localhost:5000';
 const PROJECT_TYPES = ['Residential', 'Commercial', 'Studio'];
 
 const emptyForm = {
@@ -38,7 +38,7 @@ const ProjectLocationManagement = () => {
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
       return url;
     }
-    return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   const fetchItems = async () => {
@@ -47,7 +47,7 @@ const ProjectLocationManagement = () => {
     try {
       let response = await fetch('/api/project-locations?limit=100');
       if (!response.ok) {
-        response = await fetch(`${API_BASE}/api/project-locations?limit=100`);
+        response = await fetch(`${API_BASE_URL}/api/project-locations?limit=100`);
       }
       if (!response.ok) throw new Error('Failed to load project locations');
       const data = await response.json();
@@ -125,8 +125,8 @@ const ProjectLocationManagement = () => {
       if (imageFile) body.append('projectImage', imageFile);
 
       const url = editing
-        ? `${API_BASE}/api/project-locations/${editing._id}`
-        : `${API_BASE}/api/project-locations`;
+        ? `${API_BASE_URL}/api/project-locations/${editing._id}`
+        : `${API_BASE_URL}/api/project-locations`;
       const method = editing ? 'PUT' : 'POST';
 
       const response = await fetch(url, { method, body });
@@ -148,7 +148,7 @@ const ProjectLocationManagement = () => {
   const handleDelete = async (item) => {
     if (!window.confirm(`Delete location for "${item.projectName}"?`)) return;
     try {
-      const response = await fetch(`${API_BASE}/api/project-locations/${item._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/project-locations/${item._id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete project location');
@@ -161,7 +161,7 @@ const ProjectLocationManagement = () => {
   const handleToggle = async (item) => {
     try {
       const response = await fetch(
-        `${API_BASE}/api/project-locations/${item._id}/toggle-status`,
+        `${API_BASE_URL}/api/project-locations/${item._id}/toggle-status`,
         { method: 'PATCH' }
       );
       if (!response.ok) throw new Error('Failed to update status');

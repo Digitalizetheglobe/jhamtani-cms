@@ -5,8 +5,8 @@ import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
+import { API_BASE_URL } from '../api/config';
 
-const API_BASE = 'http://localhost:5000';
 const MONTHS = [
   'January',
   'February',
@@ -51,7 +51,7 @@ const NewsletterManagement = () => {
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
       return url;
     }
-    return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   const fetchItems = async () => {
@@ -60,7 +60,7 @@ const NewsletterManagement = () => {
     try {
       let response = await fetch('/api/newsletters?limit=100');
       if (!response.ok) {
-        response = await fetch(`${API_BASE}/api/newsletters?limit=100`);
+        response = await fetch(`${API_BASE_URL}/api/newsletters?limit=100`);
       }
       if (!response.ok) throw new Error('Failed to load newsletters');
       const data = await response.json();
@@ -139,8 +139,8 @@ const NewsletterManagement = () => {
       if (pdfFile) body.append('pdfDocument', pdfFile);
 
       const url = editing
-        ? `${API_BASE}/api/newsletters/${editing._id}`
-        : `${API_BASE}/api/newsletters`;
+        ? `${API_BASE_URL}/api/newsletters/${editing._id}`
+        : `${API_BASE_URL}/api/newsletters`;
       const method = editing ? 'PUT' : 'POST';
 
       const response = await fetch(url, { method, body });
@@ -161,7 +161,7 @@ const NewsletterManagement = () => {
   const handleDelete = async (item) => {
     if (!window.confirm(`Delete newsletter "${item.title}"?`)) return;
     try {
-      const response = await fetch(`${API_BASE}/api/newsletters/${item._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/newsletters/${item._id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete newsletter');
@@ -173,7 +173,7 @@ const NewsletterManagement = () => {
 
   const handleToggle = async (item) => {
     try {
-      const response = await fetch(`${API_BASE}/api/newsletters/${item._id}/toggle-status`, {
+      const response = await fetch(`${API_BASE_URL}/api/newsletters/${item._id}/toggle-status`, {
         method: 'PATCH',
       });
       if (!response.ok) throw new Error('Failed to update status');

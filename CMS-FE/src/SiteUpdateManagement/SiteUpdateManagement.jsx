@@ -5,8 +5,8 @@ import ConstructionIcon from '@mui/icons-material/Construction';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
+import { API_BASE_URL } from '../api/config';
 
-const API_BASE = 'http://localhost:5000';
 const PROJECT_CATEGORIES = ['Residential', 'Commercial', 'Studio'];
 
 const emptyForm = {
@@ -42,7 +42,7 @@ const SiteUpdateManagement = () => {
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
       return url;
     }
-    return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   const fetchItems = async () => {
@@ -51,7 +51,7 @@ const SiteUpdateManagement = () => {
     try {
       let response = await fetch('/api/site-updates?limit=100');
       if (!response.ok) {
-        response = await fetch(`${API_BASE}/api/site-updates?limit=100`);
+        response = await fetch(`${API_BASE_URL}/api/site-updates?limit=100`);
       }
       if (!response.ok) throw new Error('Failed to load site updates');
       const data = await response.json();
@@ -153,8 +153,8 @@ const SiteUpdateManagement = () => {
       newImageFiles.forEach((file) => body.append('images', file));
 
       const url = editing
-        ? `${API_BASE}/api/site-updates/${editing._id}`
-        : `${API_BASE}/api/site-updates`;
+        ? `${API_BASE_URL}/api/site-updates/${editing._id}`
+        : `${API_BASE_URL}/api/site-updates`;
       const method = editing ? 'PUT' : 'POST';
 
       const response = await fetch(url, { method, body });
@@ -175,7 +175,7 @@ const SiteUpdateManagement = () => {
   const handleDelete = async (item) => {
     if (!window.confirm(`Delete site update "${item.title}"?`)) return;
     try {
-      const response = await fetch(`${API_BASE}/api/site-updates/${item._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/site-updates/${item._id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete site update');
@@ -187,7 +187,7 @@ const SiteUpdateManagement = () => {
 
   const handleToggle = async (item) => {
     try {
-      const response = await fetch(`${API_BASE}/api/site-updates/${item._id}/toggle-status`, {
+      const response = await fetch(`${API_BASE_URL}/api/site-updates/${item._id}/toggle-status`, {
         method: 'PATCH',
       });
       if (!response.ok) throw new Error('Failed to update status');

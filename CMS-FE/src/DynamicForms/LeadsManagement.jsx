@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../api/config';
 import {
   Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
   CircularProgress, Alert,
@@ -174,7 +175,7 @@ const LeadsManagement = () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/forms/forms');
+      const response = await fetch(`${API_BASE_URL}/api/forms/forms`);
       if (!response.ok) {
         throw new Error('Failed to load forms');
       }
@@ -328,7 +329,7 @@ const LeadsManagement = () => {
 
     try {
       const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5000/api/forms/submissions/${leadToDelete._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/forms/submissions/${leadToDelete._id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

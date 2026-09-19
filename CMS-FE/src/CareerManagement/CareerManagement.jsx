@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { API_BASE_URL } from '../api/config';
 import {
   FaPlus,
   FaEdit,
@@ -15,7 +16,6 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
 
-const API_BASE = 'http://localhost:5000';
 const STATUSES = [
   { value: 'new', label: 'New' },
   { value: 'reviewed', label: 'Reviewed' },
@@ -119,7 +119,7 @@ const CareerManagement = () => {
   const formatUrl = (url) => {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   const fetchItems = async () => {
@@ -128,7 +128,7 @@ const CareerManagement = () => {
     try {
       let response = await fetch('/api/careers?limit=100');
       if (!response.ok) {
-        response = await fetch(`${API_BASE}/api/careers?limit=100`);
+        response = await fetch(`${API_BASE_URL}/api/careers?limit=100`);
       }
       if (!response.ok) throw new Error('Failed to load career applications');
       const data = await response.json();
@@ -147,7 +147,7 @@ const CareerManagement = () => {
     try {
       let response = await fetch('/api/career-jobs?limit=100');
       if (!response.ok) {
-        response = await fetch(`${API_BASE}/api/career-jobs?limit=100`);
+        response = await fetch(`${API_BASE_URL}/api/career-jobs?limit=100`);
       }
       if (!response.ok) throw new Error('Failed to load job postings');
       const data = await response.json();
@@ -272,8 +272,8 @@ const CareerManagement = () => {
       if (resumeFile) body.append('resume', resumeFile);
 
       const url = editing
-        ? `${API_BASE}/api/careers/${editing._id}`
-        : `${API_BASE}/api/careers`;
+        ? `${API_BASE_URL}/api/careers/${editing._id}`
+        : `${API_BASE_URL}/api/careers`;
       const method = editing ? 'PUT' : 'POST';
 
       const response = await fetch(url, { method, body });
@@ -334,8 +334,8 @@ const CareerManagement = () => {
       };
 
       const url = editingJob
-        ? `${API_BASE}/api/career-jobs/${editingJob._id}`
-        : `${API_BASE}/api/career-jobs`;
+        ? `${API_BASE_URL}/api/career-jobs/${editingJob._id}`
+        : `${API_BASE_URL}/api/career-jobs`;
       const method = editingJob ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -360,7 +360,7 @@ const CareerManagement = () => {
   const handleDelete = async (item) => {
     if (!window.confirm(`Delete application from "${item.fullName}"?`)) return;
     try {
-      const response = await fetch(`${API_BASE}/api/careers/${item._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/careers/${item._id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete application');
@@ -373,7 +373,7 @@ const CareerManagement = () => {
   const handleJobDelete = async (job) => {
     if (!window.confirm(`Delete job "${job.title}"?`)) return;
     try {
-      const response = await fetch(`${API_BASE}/api/career-jobs/${job._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/career-jobs/${job._id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete job');
@@ -385,7 +385,7 @@ const CareerManagement = () => {
 
   const handleStatusChange = async (item, status) => {
     try {
-      const response = await fetch(`${API_BASE}/api/careers/${item._id}/status`, {
+      const response = await fetch(`${API_BASE_URL}/api/careers/${item._id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),

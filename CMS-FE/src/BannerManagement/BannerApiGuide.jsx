@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Close as CloseIcon, ContentCopy as ContentCopyIcon, Check as CheckIcon } from '@mui/icons-material';
 import { getApiBaseUrl } from '../api/bannerApi';
+import { API_BASE_URL } from '../api/config';
 
 const BannerApiGuide = ({ bannerData, onClose }) => {
   const [copiedSection, setCopiedSection] = useState('');
@@ -16,9 +17,9 @@ const BannerApiGuide = ({ bannerData, onClose }) => {
       data: {
         _id: bannerId,
         title: bannerData?.title || 'Ongoing Projects Banner',
-        desktopBanner: bannerData?.desktopBanner ? `${baseUrl}${bannerData.desktopBanner}` : 'http://localhost:5000/uploads/banners/desktop.webp',
-        tabletBanner: bannerData?.tabletBanner ? `${baseUrl}${bannerData.tabletBanner}` : 'http://localhost:5000/uploads/banners/tablet.webp',
-        mobileBanner: bannerData?.mobileBanner ? `${baseUrl}${bannerData.mobileBanner}` : 'http://localhost:5000/uploads/banners/mobile.webp',
+        desktopBanner: bannerData?.desktopBanner ? `${baseUrl}${bannerData.desktopBanner}` : `${API_BASE_URL}/uploads/banners/desktop.webp`,
+        tabletBanner: bannerData?.tabletBanner ? `${baseUrl}${bannerData.tabletBanner}` : `${API_BASE_URL}/uploads/banners/tablet.webp`,
+        mobileBanner: bannerData?.mobileBanner ? `${baseUrl}${bannerData.mobileBanner}` : `${API_BASE_URL}/uploads/banners/mobile.webp`,
         isActive: true
       }
     },
@@ -37,7 +38,7 @@ export default function LandingBanner({ bannerId = '${bannerId}', className = ''
   useEffect(() => {
     async function fetchBanner() {
       try {
-        const res = await fetch(\`http://localhost:5000/api/banners/\${bannerId}\`);
+        const res = await fetch(\`${API_BASE_URL}/api/banners/\${bannerId}\`);
         const json = await res.json();
         if (json.success && json.data) {
           setBanner(json.data);
@@ -57,7 +58,7 @@ export default function LandingBanner({ bannerId = '${bannerId}', className = ''
 
   if (!banner || !banner.isActive) return null;
 
-  const baseUrl = 'http://localhost:5000';
+  const baseUrl = '${API_BASE_URL}';
   const desktopSrc = banner.desktopBanner?.startsWith('http') 
     ? banner.desktopBanner 
     : \`\${baseUrl}\${banner.desktopBanner}\`;

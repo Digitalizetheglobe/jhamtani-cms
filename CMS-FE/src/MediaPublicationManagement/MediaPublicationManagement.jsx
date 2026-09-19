@@ -5,8 +5,8 @@ import ArticleIcon from '@mui/icons-material/Article';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
+import { API_BASE_URL } from '../api/config';
 
-const API_BASE = 'http://localhost:5000';
 
 const emptyForm = {
   publisher: '',
@@ -39,7 +39,7 @@ const MediaPublicationManagement = () => {
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
       return url;
     }
-    return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   const fetchItems = async () => {
@@ -48,7 +48,7 @@ const MediaPublicationManagement = () => {
     try {
       let response = await fetch('/api/media-publications?limit=100');
       if (!response.ok) {
-        response = await fetch(`${API_BASE}/api/media-publications?limit=100`);
+        response = await fetch(`${API_BASE_URL}/api/media-publications?limit=100`);
       }
       if (!response.ok) throw new Error('Failed to load media publications');
       const data = await response.json();
@@ -133,8 +133,8 @@ const MediaPublicationManagement = () => {
       if (imageFile) body.append('image', imageFile);
 
       const url = editing
-        ? `${API_BASE}/api/media-publications/${editing._id}`
-        : `${API_BASE}/api/media-publications`;
+        ? `${API_BASE_URL}/api/media-publications/${editing._id}`
+        : `${API_BASE_URL}/api/media-publications`;
       const method = editing ? 'PUT' : 'POST';
 
       const response = await fetch(url, { method, body });
@@ -155,7 +155,7 @@ const MediaPublicationManagement = () => {
   const handleDelete = async (item) => {
     if (!window.confirm(`Delete article "${item.title}"?`)) return;
     try {
-      const response = await fetch(`${API_BASE}/api/media-publications/${item._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/media-publications/${item._id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete media publication');
@@ -168,7 +168,7 @@ const MediaPublicationManagement = () => {
   const handleToggle = async (item) => {
     try {
       const response = await fetch(
-        `${API_BASE}/api/media-publications/${item._id}/toggle-status`,
+        `${API_BASE_URL}/api/media-publications/${item._id}/toggle-status`,
         { method: 'PATCH' }
       );
       if (!response.ok) throw new Error('Failed to update status');

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../api/config';
 import {
   Box, Typography, TextField, FormControl, FormHelperText,
   InputLabel, Select, MenuItem, FormControlLabel, Checkbox,
@@ -32,9 +33,9 @@ const DynamicForm = ({ formId, page, initialFormData, onSubmit, isSubmitting }) 
         let response;
 
         if (formId) {
-          response = await fetch(`http://localhost:5000/api/forms/${formId}`);
+          response = await fetch(`${API_BASE_URL}/api/forms/${formId}`);
         } else if (page) {
-          response = await fetch(`http://localhost:5000/api/forms/page/${page}`);
+          response = await fetch(`${API_BASE_URL}/api/forms/page/${page}`);
         } else {
           throw new Error('Either formId or page must be provided');
         }

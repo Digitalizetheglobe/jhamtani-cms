@@ -4,6 +4,7 @@ import { Code, ContentCopy, Check, ChevronRight, ChevronLeft } from '@mui/icons-
 import { Tooltip, IconButton } from '@mui/material';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { API_BASE_URL } from '../../api/config';
 
 const FormApiGuide = ({ formId, formConfig, onClose }) => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -44,7 +45,7 @@ const FormApiGuide = ({ formId, formConfig, onClose }) => {
   const exampleBody = generateExampleBody();
   const exampleBodyString = JSON.stringify(exampleBody, null, 2);
 
-  const apiEndpoint = `http://localhost:5000/api/forms/forms/${formId}/submit`;
+  const apiEndpoint = `${API_BASE_URL}/api/forms/forms/${formId}/submit`;
 
   const handleCopyCode = (text) => {
     navigator.clipboard.writeText(text);
@@ -166,12 +167,12 @@ const FormApiGuide = ({ formId, formConfig, onClose }) => {
                 <div className="flex items-center mb-2">
                   <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded mr-2">GET</span>
                   <code className="text-sm font-mono flex-1 bg-gray-100 p-2 rounded">
-                    {`http://localhost:5000/api/forms/forms/${formId}`}
+                    {`${API_BASE_URL}/api/forms/forms/${formId}`}
                   </code>
                   <Tooltip title="Copy to clipboard">
                     <IconButton
                       size="small"
-                      onClick={() => handleCopyCode(`http://localhost:5000/api/forms/forms/${formId}`)}
+                      onClick={() => handleCopyCode(`${API_BASE_URL}/api/forms/forms/${formId}`)}
                       className="ml-2"
                     >
                       <ContentCopy fontSize="small" />

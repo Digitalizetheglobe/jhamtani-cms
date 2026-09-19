@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../api/config';
 import {
   Box,
   Typography,
@@ -40,7 +41,7 @@ const EmailTemplateManagement = () => {
     const fetchTemplates = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/email-templates');
+        const response = await fetch(`${API_BASE_URL}/api/email-templates`);
         if (!response.ok) throw new Error('Failed to fetch templates');
         const data = await response.json();
         setTemplates(data);
@@ -71,8 +72,8 @@ const EmailTemplateManagement = () => {
     try {
       const method = editTemplate ? 'PUT' : 'POST';
       const url = editTemplate
-        ? `http://localhost:5000/api/email-templates/${editTemplate._id}`
-        : 'http://localhost:5000/api/email-templates';
+        ? `${API_BASE_URL}/api/email-templates/${editTemplate._id}`
+        : `${API_BASE_URL}/api/email-templates`;
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -94,7 +95,7 @@ const EmailTemplateManagement = () => {
   // Delete a template
   const deleteTemplate = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/email-templates/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/email-templates/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete template');
@@ -119,7 +120,7 @@ const EmailTemplateManagement = () => {
   // Send a test email
   const sendTestEmail = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/email-templates/test', {
+      const response = await fetch(`${API_BASE_URL}/api/email-templates/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

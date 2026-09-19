@@ -5,8 +5,8 @@ import GavelIcon from '@mui/icons-material/Gavel';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
+import { API_BASE_URL } from '../api/config';
 
-const API_BASE = 'http://localhost:5000';
 const PROJECT_TYPES = ['Residential', 'Commercial', 'Studio'];
 
 const emptyForm = {
@@ -40,7 +40,7 @@ const MahareraManagement = () => {
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
       return url;
     }
-    return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   const fetchItems = async () => {
@@ -49,7 +49,7 @@ const MahareraManagement = () => {
     try {
       let response = await fetch('/api/mahareras?limit=100');
       if (!response.ok) {
-        response = await fetch(`${API_BASE}/api/mahareras?limit=100`);
+        response = await fetch(`${API_BASE_URL}/api/mahareras?limit=100`);
       }
       if (!response.ok) throw new Error('Failed to load Maharera records');
       const data = await response.json();
@@ -135,8 +135,8 @@ const MahareraManagement = () => {
       if (documentFile) body.append('document', documentFile);
 
       const url = editing
-        ? `${API_BASE}/api/mahareras/${editing._id}`
-        : `${API_BASE}/api/mahareras`;
+        ? `${API_BASE_URL}/api/mahareras/${editing._id}`
+        : `${API_BASE_URL}/api/mahareras`;
       const method = editing ? 'PUT' : 'POST';
 
       const response = await fetch(url, { method, body });
@@ -157,7 +157,7 @@ const MahareraManagement = () => {
   const handleDelete = async (item) => {
     if (!window.confirm(`Delete Maharera record for "${item.projectName}"?`)) return;
     try {
-      const response = await fetch(`${API_BASE}/api/mahareras/${item._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/mahareras/${item._id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete Maharera record');
@@ -169,7 +169,7 @@ const MahareraManagement = () => {
 
   const handleToggle = async (item) => {
     try {
-      const response = await fetch(`${API_BASE}/api/mahareras/${item._id}/toggle-status`, {
+      const response = await fetch(`${API_BASE_URL}/api/mahareras/${item._id}/toggle-status`, {
         method: 'PATCH',
       });
       if (!response.ok) throw new Error('Failed to update status');

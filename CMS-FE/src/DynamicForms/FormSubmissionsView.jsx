@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../api/config';
 import {
   Box, Typography, Paper, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, TablePagination, IconButton, Button, Dialog,
@@ -33,7 +34,7 @@ const FormSubmissionsView = () => {
 
       try {
         // Fetch form configuration
-        const formResponse = await fetch(`http://localhost:5000/api/forms/forms/${formId}`);
+        const formResponse = await fetch(`${API_BASE_URL}/api/forms/forms/${formId}`);
         if (!formResponse.ok) {
           throw new Error('Failed to load form configuration');
         }
@@ -41,7 +42,7 @@ const FormSubmissionsView = () => {
         setFormConfig(formData.data);
 
         // Fetch submissions
-        const submissionsResponse = await fetch(`http://localhost:5000/api/forms/forms/${formId}/submissions`);
+        const submissionsResponse = await fetch(`${API_BASE_URL}/api/forms/forms/${formId}/submissions`);
         if (!submissionsResponse.ok) {
           throw new Error('Failed to load submissions');
         }
@@ -80,7 +81,7 @@ const FormSubmissionsView = () => {
 
   const confirmDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/submissions/${submissionToDelete._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/submissions/${submissionToDelete._id}`, {
         method: 'DELETE'
       });
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../api/config';
 import {
   Dialog,
   DialogTitle,
@@ -58,7 +59,7 @@ const YouTubeManagement = () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/youtube-videos');
+      const response = await fetch(`${API_BASE_URL}/api/youtube-videos`);
       if (!response.ok) {
         throw new Error('Failed to load videos');
       }
@@ -277,7 +278,7 @@ const YouTubeManagement = () => {
     };
 
     try {
-      const response = await fetch(`http://localhost:5000/api/youtube-videos${editingVideo ? `/${editingVideo._id}` : ''}`, {
+      const response = await fetch(`${API_BASE_URL}/api/youtube-videos${editingVideo ? `/${editingVideo._id}` : ''}`, {
         method: editingVideo ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -316,7 +317,7 @@ const YouTubeManagement = () => {
   // Confirm delete
   const confirmDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/youtube-videos/${videoToDelete._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/youtube-videos/${videoToDelete._id}`, {
         method: 'DELETE'
       });
 
@@ -352,7 +353,7 @@ const YouTubeManagement = () => {
   // Toggle active status
   const toggleStatus = async (video) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/youtube-videos/${video._id}/toggle-status`, {
+      const response = await fetch(`${API_BASE_URL}/api/youtube-videos/${video._id}/toggle-status`, {
         method: 'PATCH'
       });
 

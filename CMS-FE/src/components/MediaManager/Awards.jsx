@@ -6,8 +6,8 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import PageShell from '../PageShell';
 import { PageHero, StatCards, EmptyState } from '../PageHero';
+import { API_BASE_URL } from '../../api/config';
 
-const API_BASE = 'http://localhost:5000';
 
 const Awards = () => {
   const [awards, setAwards] = useState([]);
@@ -33,7 +33,7 @@ const Awards = () => {
     try {
       let response = await fetch('/api/awards?limit=100');
       if (!response.ok) {
-        response = await fetch(`${API_BASE}/api/awards?limit=100`);
+        response = await fetch(`${API_BASE_URL}/api/awards?limit=100`);
       }
       if (!response.ok) throw new Error('Failed to load awards');
       const data = await response.json();
@@ -55,7 +55,7 @@ const Awards = () => {
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
       return url;
     }
-    return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
   };
 
   const openModal = (award = null) => {
@@ -114,8 +114,8 @@ const Awards = () => {
       }
 
       const url = editingAward
-        ? `${API_BASE}/api/awards/${editingAward._id}`
-        : `${API_BASE}/api/awards`;
+        ? `${API_BASE_URL}/api/awards/${editingAward._id}`
+        : `${API_BASE_URL}/api/awards`;
       const method = editingAward ? 'PUT' : 'POST';
 
       const response = await fetch(url, { method, body });
@@ -136,7 +136,7 @@ const Awards = () => {
   const handleDelete = async (award) => {
     if (!window.confirm('Delete this award image?')) return;
     try {
-      const response = await fetch(`${API_BASE}/api/awards/${award._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/awards/${award._id}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete award');
@@ -148,7 +148,7 @@ const Awards = () => {
 
   const handleToggle = async (award) => {
     try {
-      const response = await fetch(`${API_BASE}/api/awards/${award._id}/toggle-status`, {
+      const response = await fetch(`${API_BASE_URL}/api/awards/${award._id}/toggle-status`, {
         method: 'PATCH',
       });
       if (!response.ok) throw new Error('Failed to update status');

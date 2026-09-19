@@ -5,6 +5,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import PageShell from '../components/PageShell';
 import { PageHero, StatCards, EmptyState } from '../components/PageHero';
+import { API_BASE_URL } from '../api/config';
 
 const TestimonialManagement = () => {
   const [testimonials, setTestimonials] = useState([]);
@@ -29,7 +30,7 @@ const TestimonialManagement = () => {
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/testimonials/');
+        const response = await fetch(`${API_BASE_URL}/api/testimonials/`);
         const data = await response.json();
         console.log('Fetched testimonials:', data); // Debug log
         setTestimonials(data);
@@ -81,8 +82,8 @@ const TestimonialManagement = () => {
     e.preventDefault();
     try {
       const url = currentTestimonial
-        ? `http://localhost:5000/api/testimonials/${currentTestimonial._id}`
-        : 'http://localhost:5000/api/testimonials/';
+        ? `${API_BASE_URL}/api/testimonials/${currentTestimonial._id}`
+        : `${API_BASE_URL}/api/testimonials/`;
 
       const method = currentTestimonial ? 'PUT' : 'POST';
 
@@ -165,7 +166,7 @@ const TestimonialManagement = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this testimonial?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/testimonials/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/testimonials/${id}`, {
           method: 'DELETE'
         });
 

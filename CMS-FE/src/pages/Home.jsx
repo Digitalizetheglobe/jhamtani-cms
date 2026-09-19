@@ -6,7 +6,6 @@ import {
   FaPenFancy,
   FaInbox,
   FaQuoteRight,
-  FaImage,
   FaWpforms,
   FaArrowRight,
 } from "react-icons/fa";
@@ -37,12 +36,6 @@ const MODULES = [
     title: "Customer Stories",
     subtitle: "Their stories. Our legacy.",
     icon: FaQuoteRight,
-  },
-  {
-    to: "/banner-management",
-    title: "Homepage Banners",
-    subtitle: "Hero and campaign media",
-    icon: FaImage,
   },
   {
     to: "/form-management",

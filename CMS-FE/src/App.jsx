@@ -34,10 +34,6 @@ import FormPreviewPage from "./DynamicForms/FormPreviewPage";
 
 import LeadsManagement from "./DynamicForms/LeadsManagement";
 
-import BannerManagementDashboard from "./BannerManagement/BannerManagementDashboard";
-
-import BannerForm from "./BannerManagement/BannerForm";
-
 import ProjectManagementDashboard from "./ProjectManagement/ProjectManagementDashboard";
 
 import ProjectForm from "./ProjectManagement/ProjectForm";
@@ -229,16 +225,6 @@ function AppWrapper() {
           <Route path="/career" element={<ProtectedRoute><CareerManagement /></ProtectedRoute>} />
 
           <Route path="/leads-management" element={<ProtectedRoute><LeadsManagement /></ProtectedRoute>} />
-
-
-
-          <Route path="/banner-management" element={<ProtectedRoute><BannerManagementDashboard /></ProtectedRoute>} />
-
-          <Route path="/banner-management/create" element={<ProtectedRoute><BannerForm /></ProtectedRoute>} />
-
-          <Route path="/banner-management/edit/:id" element={<ProtectedRoute><BannerForm /></ProtectedRoute>} />
-
-
 
           <Route path="/project-management" element={<ProtectedRoute><ProjectManagementDashboard /></ProtectedRoute>} />
 

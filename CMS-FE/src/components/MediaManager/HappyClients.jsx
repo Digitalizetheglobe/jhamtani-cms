@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaUser } from 'react-icons/fa';
 import CircularProgress from '@mui/material/CircularProgress';
 import PageShell from '../PageShell';
 import { PageHero, StatCards, EmptyState } from '../PageHero';
+import { API_BASE_URL } from '../../api/config';
 
 const HappyClients = () => {
   const [clients, setClients] = useState([]);
@@ -19,14 +20,6 @@ const HappyClients = () => {
 
   const [selectedFile, setSelectedFile] = useState(null);
 
-  const API_BASE_URL = useMemo(() => {
-    const envUrl = import.meta.env?.VITE_API_BASE_URL;
-    if (envUrl && envUrl.trim().length > 0) {
-      return envUrl.replace(/\/$/, '');
-    }
-    return 'http://localhost:5000';
-  }, []);
-
   const resolvePhotoUrl = (photoUrl) => {
     if (!photoUrl) return '';
     if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
@@ -39,23 +32,8 @@ const HappyClients = () => {
   const fetchClients = async (page = 1) => {
     setLoading(true);
     try {
-      console.log('Fetching happy clients from backend API...');
-
-      // Try relative URL first (with proxy)
-      let apiUrl = `/api/happy-clients?page=${page}&limit=100&isActive=true&sort=order`;
-      console.log('Trying relative URL:', apiUrl);
-
-      let response = await fetch(apiUrl);
-      console.log('Response status:', response.status);
-
-      // If relative URL fails, try absolute URL
-      if (!response.ok || response.headers.get('content-type')?.includes('text/html')) {
-        console.log('Relative URL failed, trying absolute URL...');
-        apiUrl = `http://localhost:5000/api/happy-clients?page=${page}&limit=100&isActive=true&sort=order`;
-        console.log('Trying absolute URL:', apiUrl);
-        response = await fetch(apiUrl);
-        console.log('Absolute URL response status:', response.status);
-      }
+      const apiUrl = `${API_BASE_URL}/api/happy-clients?page=${page}&limit=100&isActive=true&sort=order`;
+      const response = await fetch(apiUrl);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -104,7 +82,7 @@ const HappyClients = () => {
 
     if (!response.ok && url.startsWith('/api/')) {
       console.log('Relative URL failed, trying absolute URL...');
-      const absoluteUrl = `http://localhost:5000${url}`;
+      const absoluteUrl = `${API_BASE_URL}${url}`;
       console.log('Trying absolute URL:', absoluteUrl);
 
       response = await fetch(absoluteUrl, {
@@ -151,8 +129,8 @@ const HappyClients = () => {
       }
 
       const url = editingClient
-        ? `/api/happy-clients/${editingClient._id}`
-        : '/api/happy-clients';
+        ? `${API_BASE_URL}/api/happy-clients/${editingClient._id}`
+        : `${API_BASE_URL}/api/happy-clients`;
 
       const method = editingClient ? 'PUT' : 'POST';
 
@@ -197,7 +175,7 @@ const HappyClients = () => {
       formDataToSend.append('order', '0');
       formDataToSend.append('photo', selectedFile);
 
-      const response = await sendClientRequest('/api/happy-clients', 'POST', formDataToSend);
+      const response = await sendClientRequest(`${API_BASE_URL}/api/happy-clients`, 'POST', formDataToSend);
 
       if (response.ok) {
         const result = await response.json();
@@ -223,16 +201,9 @@ const HappyClients = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this client?')) {
       try {
-        let response = await fetch(`/api/happy-clients/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/happy-clients/${id}`, {
           method: 'DELETE'
         });
-
-        // If relative URL fails, try absolute URL
-        if (!response.ok && response.status !== 404) {
-          response = await fetch(`http://localhost:5000/api/happy-clients/${id}`, {
-            method: 'DELETE'
-          });
-        }
 
         if (response.ok) {
           fetchClients(currentPage);

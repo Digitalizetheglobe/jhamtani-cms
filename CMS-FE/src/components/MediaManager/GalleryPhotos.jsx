@@ -5,6 +5,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import PageShell from '../PageShell';
 import { PageHero, StatCards, EmptyState } from '../PageHero';
+import { API_BASE_URL } from '../../api/config';
 
 const GalleryPhotos = () => {
   const [photos, setPhotos] = useState([]);
@@ -44,20 +45,8 @@ const GalleryPhotos = () => {
       if (selectedCategory) {
         query += `&category=${encodeURIComponent(selectedCategory)}`;
       }
-      let apiUrl = `/api/gallery-photos?${query}`;
-      console.log('Trying relative URL:', apiUrl);
-
-      let response = await fetch(apiUrl);
-      console.log('Response status:', response.status);
-
-      // If relative URL fails, try absolute URL
-      if (!response.ok || response.headers.get('content-type')?.includes('text/html')) {
-        console.log('Relative URL failed, trying absolute URL...');
-        apiUrl = `http://localhost:5000/api/gallery-photos?${query}`;
-        console.log('Trying absolute URL:', apiUrl);
-        response = await fetch(apiUrl);
-        console.log('Absolute URL response status:', response.status);
-      }
+      const apiUrl = `${API_BASE_URL}/api/gallery-photos?${query}`;
+      const response = await fetch(apiUrl);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -81,7 +70,7 @@ const GalleryPhotos = () => {
   const testBackendConnection = async () => {
     try {
       console.log('Testing direct backend connection...');
-      const response = await fetch('http://localhost:5000/api/gallery-photos');
+      const response = await fetch(`${API_BASE_URL}/api/gallery-photos`);
       console.log('Direct backend response status:', response.status);
       if (response.ok) {
         const data = await response.json();
@@ -95,10 +84,10 @@ const GalleryPhotos = () => {
   // Fetch categories for dropdowns
   const fetchCategories = async () => {
     try {
-      let url = 'http://localhost:5000/api/gallery-photos/categories';
+      let url = `${API_BASE_URL}/api/gallery-photos/categories`;
       let response = await fetch(url);
       if (!response.ok) {
-        url = 'http://localhost:5000/api/gallery-photos/categories';
+        url = `${API_BASE_URL}/api/gallery-photos/categories`;
         response = await fetch(url);
       }
       if (response.ok) {
@@ -245,7 +234,7 @@ const GalleryPhotos = () => {
       // If relative URL fails, try absolute URL
       if (!response.ok && url.startsWith('/api/')) {
         console.log('Relative URL failed, trying absolute URL...');
-        const absoluteUrl = `http://localhost:5000${url}`;
+        const absoluteUrl = `${API_BASE_URL}${url}`;
         console.log('Trying absolute URL:', absoluteUrl);
 
         response = await fetch(absoluteUrl, {
@@ -307,7 +296,7 @@ const GalleryPhotos = () => {
       let response = await fetch(relativeUrl, { method: 'DELETE' });
 
       if (!response.ok) {
-        const absoluteUrl = `http://localhost:5000/api/gallery-photos/${id}`;
+        const absoluteUrl = `${API_BASE_URL}/api/gallery-photos/${id}`;
         response = await fetch(absoluteUrl, { method: 'DELETE' });
       }
 
@@ -447,7 +436,7 @@ const GalleryPhotos = () => {
             >
               <div className="flex items-start gap-3 flex-1 min-w-0">
                 <img
-                  src={photo.imageUrl?.startsWith('http') ? photo.imageUrl : `http://localhost:5000${photo.imageUrl}`}
+                  src={photo.imageUrl?.startsWith('http') ? photo.imageUrl : `${API_BASE_URL}${photo.imageUrl}`}
                   alt={photo.altText || photo.title}
                   className="w-20 h-14 rounded-xl object-cover flex-shrink-0 bg-[#f5f3ef]"
                   onError={(e) => {

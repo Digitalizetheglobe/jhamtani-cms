@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../api/config';
 
 const AnnouncementPreview = () => {
   const [announcements, setAnnouncements] = useState([]); // Initialize as empty array
@@ -10,7 +11,7 @@ const AnnouncementPreview = () => {
     const fetchAnnouncements = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get('http://localhost:5000/api/announcements', {
+        const response = await axios.get(`${API_BASE_URL}/api/announcements`, {
           params: {
             isPublished: true,
             showOnFrontend: true,

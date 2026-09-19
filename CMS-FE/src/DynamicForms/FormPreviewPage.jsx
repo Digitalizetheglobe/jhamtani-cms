@@ -5,6 +5,7 @@ import { CircularProgress } from '@mui/material';
 import { ArrowBack, CheckCircle, ErrorOutline, InfoOutlined } from '@mui/icons-material';
 import FormApiGuide from './FormApiGuide';
 import { Code as CodeIcon } from '@mui/icons-material';
+import { API_BASE_URL } from '../api/config';
 
 const FormPreviewPage = () => {
   const { formId, page } = useParams();
@@ -27,9 +28,9 @@ const FormPreviewPage = () => {
         let response;
 
         if (formId) {
-          response = await fetch(`http://localhost:5000/api/forms/forms/${formId}`);
+          response = await fetch(`${API_BASE_URL}/api/forms/forms/${formId}`);
         } else if (page) {
-          response = await fetch(`http://localhost:5000/api/forms/page/${page}`);
+          response = await fetch(`${API_BASE_URL}/api/forms/page/${page}`);
         } else {
           throw new Error('Either formId or page must be provided');
         }
@@ -61,7 +62,7 @@ const FormPreviewPage = () => {
         data: formValues
       };
 
-      const response = await fetch(`http://localhost:5000/api/forms/forms/${formId}/submit`, {
+      const response = await fetch(`${API_BASE_URL}/api/forms/forms/${formId}/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

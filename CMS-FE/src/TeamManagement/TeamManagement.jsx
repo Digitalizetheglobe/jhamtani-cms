@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../api/config';
 import {
   Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
   CircularProgress, Alert, Avatar, Switch, FormControlLabel,
@@ -54,7 +55,7 @@ const TeamManagement = () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/team');
+      const response = await fetch(`${API_BASE_URL}/api/team`);
       if (!response.ok) {
         throw new Error('Failed to load team members');
       }
@@ -129,7 +130,7 @@ const TeamManagement = () => {
         linkedinUrl: member.linkedinUrl || '',
         isActive: member.isActive
       });
-      setPhotoPreview(member.photo ? `http://localhost:5000/uploads/team/${member.photo}` : null);
+      setPhotoPreview(member.photo ? `${API_BASE_URL}/uploads/team/${member.photo}` : null);
     } else {
       setEditingMember(null);
       setFormData({
@@ -246,13 +247,13 @@ const TeamManagement = () => {
         formDataToSend.append('linkedinUrl', normalizedFormData.linkedinUrl);
         formDataToSend.append('isActive', formData.isActive);
 
-        response = await fetch(`http://localhost:5000/api/team${editingMember ? `/${editingMember._id}` : ''}`, {
+        response = await fetch(`${API_BASE_URL}/api/team${editingMember ? `/${editingMember._id}` : ''}`, {
           method: editingMember ? 'PUT' : 'POST',
           body: formDataToSend
         });
       } else {
         // Upload without photo
-        response = await fetch(`http://localhost:5000/api/team${editingMember ? `/${editingMember._id}` : ''}`, {
+        response = await fetch(`${API_BASE_URL}/api/team${editingMember ? `/${editingMember._id}` : ''}`, {
           method: editingMember ? 'PUT' : 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -278,7 +279,7 @@ const TeamManagement = () => {
   // Confirm delete
   const confirmDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/team/${memberToDelete._id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/team/${memberToDelete._id}`, {
         method: 'DELETE'
       });
 
@@ -298,7 +299,7 @@ const TeamManagement = () => {
   // Toggle active status
   const toggleStatus = async (member) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/team/${member._id}/toggle-status`, {
+      const response = await fetch(`${API_BASE_URL}/api/team/${member._id}/toggle-status`, {
         method: 'PATCH'
       });
 
@@ -409,7 +410,7 @@ const TeamManagement = () => {
               >
                 <div className="flex items-start gap-3 flex-1 min-w-0">
                   <Avatar
-                    src={member.photo ? `http://localhost:5000/uploads/team/${member.photo}` : undefined}
+                    src={member.photo ? `${API_BASE_URL}/uploads/team/${member.photo}` : undefined}
                     className="!w-12 !h-12 !bg-[#C5A880]/20 !text-[#A0725B]"
                   >
                     {member.fullName ? member.fullName.charAt(0) : '?'}
@@ -476,7 +477,7 @@ const TeamManagement = () => {
             <div className="space-y-5 pt-2">
               <div className="bg-[#f5f3ef] p-4 rounded-xl flex items-center gap-4">
                 <Avatar
-                  src={selectedMember.photo ? `http://localhost:5000/uploads/team/${selectedMember.photo}` : undefined}
+                  src={selectedMember.photo ? `${API_BASE_URL}/uploads/team/${selectedMember.photo}` : undefined}
                   className="!w-16 !h-16 !bg-[#C5A880]/20 !text-[#A0725B]"
                 >
                   {selectedMember.fullName ? selectedMember.fullName.charAt(0) : '?'}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiUpload, FiCalendar, FiClock, FiTag, FiCheckCircle, FiXCircle, FiArrowLeft, FiSave } from 'react-icons/fi';
 import RichTextEditor from './RichTextEditor';
+import { API_BASE_URL } from '../api/config';
 
 const BlogEditForm = () => {
   const { blogId } = useParams();
@@ -47,7 +48,7 @@ const BlogEditForm = () => {
   const fetchBlogData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/blogs/${blogId}`);
+      const response = await fetch(`${API_BASE_URL}/api/blogs/${blogId}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch blog data');
@@ -221,13 +222,13 @@ const BlogEditForm = () => {
       let response;
       if (isEditMode) {
         // Update existing blog
-        response = await fetch(`http://localhost:5000/api/blogs/${blogId}`, {
+        response = await fetch(`${API_BASE_URL}/api/blogs/${blogId}`, {
           method: 'PUT',
           body: formDataToSend,
         });
       } else {
         // Create new blog
-        response = await fetch('http://localhost:5000/api/blogs', {
+        response = await fetch(`${API_BASE_URL}/api/blogs`, {
           method: 'POST',
           body: formDataToSend,
         });

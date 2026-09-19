@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import FieldEditor from '../components/DynamicForms/FieldEditor';
 import FormPreview from '../components/DynamicForms/FormPreview';
+import { API_BASE_URL } from '../api/config';
 
 // Icons - using correct MUI icon names
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -43,7 +44,7 @@ const FormBuilder = () => {
       setError(null);
 
       try {
-        const response = await fetch(`http://localhost:5000/api/forms/forms/${formId}`);
+        const response = await fetch(`${API_BASE_URL}/api/forms/forms/${formId}`);
         if (!response.ok) {
           throw new Error('Failed to load form data');
         }
@@ -190,7 +191,7 @@ const FormBuilder = () => {
 
       if (formId) {
         // Update existing form
-        response = await fetch(`http://localhost:5000/api/forms/forms/${formId}`, {
+        response = await fetch(`${API_BASE_URL}/api/forms/forms/${formId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -199,7 +200,7 @@ const FormBuilder = () => {
         });
       } else {
         // Create new form
-        response = await fetch('http://localhost:5000/api/forms/forms', {
+        response = await fetch(`${API_BASE_URL}/api/forms/forms`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
